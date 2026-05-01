@@ -1,0 +1,57 @@
+{
+  "name": "OpenSCAD",
+  "scopeName": "source.scad",
+  "fileTypes": ["scad"],
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#keywords" },
+    { "include": "#functions" },
+    { "include": "#constants" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.scad",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.scad",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.scad",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        { "name": "constant.character.escape.scad", "match": "\\\\." }
+      ]
+    },
+    "keywords": {
+      "name": "keyword.control.scad",
+      "match": "\\b(module|function|if|else|for|let|each|include|use|assert|echo)\\b"
+    },
+    "functions": {
+      "name": "support.function.scad",
+      "match": "\\b(cube|sphere|cylinder|polyhedron|square|circle|polygon|text|linear_extrude|rotate_extrude|translate|rotate|scale|mirror|multmatrix|color|offset|hull|minkowski|union|difference|intersection|projection|render|surface|import|resize|children|child)\\b"
+    },
+    "constants": {
+      "name": "constant.language.scad",
+      "match": "\\b(true|false|undef|PI)\\b"
+    },
+    "numbers": {
+      "name": "constant.numeric.scad",
+      "match": "\\b(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?\\b"
+    },
+    "operators": {
+      "name": "keyword.operator.scad",
+      "match": "[+\\-*/%=<>!&|^~?:]"
+    }
+  }
+}

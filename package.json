@@ -1,0 +1,358 @@
+{
+  "name": "vscode-3dmake-gui",
+  "displayName": "3DMake GUI",
+  "description": "Accessibility-focused GUI wrapper for tdeck/3dmake — build, slice, preview, and print OpenSCAD models from VS Code.",
+  "version": "2026.4.29",
+  "publisher": "mrhunsaker",
+  "license": "Apache-2.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "3dmake",
+    "openscad",
+    "accessibility",
+    "3d-printing",
+    "blind",
+    "screenreader"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrhunsaker/3dmakeGUI"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "3dmake-explorer",
+          "title": "3DMake",
+          "icon": "resources/activitybar.svg"
+        }
+      ]
+    },
+    "views": {
+      "3dmake-explorer": [
+        {
+          "id": "3dmake.projectView",
+          "name": "Project",
+          "icon": "resources/activitybar.svg",
+          "contextualTitle": "3DMake Project"
+        },
+        {
+          "id": "3dmake.commandOptions",
+          "name": "Command Options",
+          "icon": "resources/activitybar.svg",
+          "contextualTitle": "3DMake Command Options"
+        },
+        {
+          "id": "3dmake.quickActions",
+          "name": "Quick Actions",
+          "icon": "resources/activitybar.svg",
+          "contextualTitle": "3DMake Quick Actions"
+        },
+        {
+          "id": "3dmake.settingsView",
+          "name": "Settings & Tools",
+          "icon": "resources/activitybar.svg",
+          "contextualTitle": "3DMake Settings"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "3dmake.selectProject",
+        "title": "3DMake: Select Project File or Directory",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runBuild",
+        "title": "3DMake: Build STL",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runSlice",
+        "title": "3DMake: Slice",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runOrient",
+        "title": "3DMake: Orient",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runPreview",
+        "title": "3DMake: Preview (SVG)",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runBuildSlice",
+        "title": "3DMake: Build + Slice",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runFullPipeline",
+        "title": "3DMake: Full Pipeline (Build + Orient + Slice)",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runInfo",
+        "title": "3DMake: Describe (Info)",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runPrint",
+        "title": "3DMake: Print",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runNew",
+        "title": "3DMake: New Project",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runSetup",
+        "title": "3DMake: Run Setup",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runListLibraries",
+        "title": "3DMake: List Libraries",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runInstallLibraries",
+        "title": "3DMake: Install Libraries",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runListProfiles",
+        "title": "3DMake: List Profiles",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runListOverlays",
+        "title": "3DMake: List Overlays",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runVersion",
+        "title": "3DMake: Show Version",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runSelfUpdate",
+        "title": "3DMake: Self-Update",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runHelp",
+        "title": "3DMake: Show Help",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runCustomCommand",
+        "title": "3DMake: Run Custom Command",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.viewStl",
+        "title": "3DMake: View STL in 3D Viewer",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.viewLastSvg",
+        "title": "3DMake: View Last SVG Preview",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.set3dmPath",
+        "title": "3DMake: Set 3dm Binary Path",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.openGlobalConfig",
+        "title": "3DMake: Open Global Config (defaults.toml)",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.openProjectConfig",
+        "title": "3DMake: Open Project Config (3dmake.toml)",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runImageExport",
+        "title": "3DMake: Export Images",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.refreshProjectView",
+        "title": "3DMake: Refresh Project View",
+        "icon": "$(refresh)",
+        "category": "3DMake"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "3dmake.runBuild",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "resourceExtname == '.scad'"
+      },
+      {
+        "command": "3dmake.runPreview",
+        "key": "ctrl+shift+p",
+        "mac": "cmd+shift+p",
+        "when": "resourceExtname == '.scad'"
+      },
+      {
+        "command": "3dmake.runCustomCommand",
+        "key": "ctrl+shift+x",
+        "mac": "cmd+shift+x"
+      },
+      {
+        "command": "3dmake.selectProject",
+        "key": "ctrl+shift+o",
+        "mac": "cmd+shift+o"
+      },
+      {
+        "command": "3dmake.viewStl",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "resourceExtname == '.stl'"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "3dmake.runBuild",
+          "when": "resourceExtname == '.scad'",
+          "group": "3dmake@1"
+        },
+        {
+          "command": "3dmake.runPreview",
+          "when": "resourceExtname == '.scad'",
+          "group": "3dmake@2"
+        },
+        {
+          "command": "3dmake.viewStl",
+          "when": "resourceExtname == '.stl'",
+          "group": "3dmake@3"
+        },
+        {
+          "command": "3dmake.openProjectConfig",
+          "when": "resourceFilename == '3dmake.toml'",
+          "group": "3dmake@4"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "3dmake.runBuild",
+          "when": "resourceExtname == '.scad'",
+          "group": "3dmake@1"
+        },
+        {
+          "command": "3dmake.runPreview",
+          "when": "resourceExtname == '.scad'",
+          "group": "3dmake@2"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "3dmake.refreshProjectView",
+          "when": "view == 3dmake.projectView",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "3DMake GUI",
+      "properties": {
+        "3dmake.binaryPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the 3dm binary. Leave empty to auto-detect from PATH or THREE_DM_PATH environment variable.",
+          "scope": "machine"
+        },
+        "3dmake.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "Default model name passed to -m flag."
+        },
+        "3dmake.defaultView": {
+          "type": "string",
+          "default": "3sil",
+          "enum": [
+            "3sil",
+            "frontsil",
+            "backsil",
+            "leftsil",
+            "rightsil",
+            "topsil"
+          ],
+          "description": "Default silhouette view passed to -v flag."
+        },
+        "3dmake.defaultProfile": {
+          "type": "string",
+          "default": "",
+          "description": "Default slicer profile passed to -p flag."
+        },
+        "3dmake.showOutputOnRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reveal the Output Channel when a 3dm command runs."
+        },
+        "3dmake.announceCommandCompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show an information/error notification when a command finishes, for screen reader users."
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "openscad",
+        "aliases": [
+          "OpenSCAD",
+          "openscad"
+        ],
+        "extensions": [
+          ".scad"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "openscad",
+        "scopeName": "source.scad",
+        "path": "./syntaxes/openscad.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^3.9.1",
+    "eslint": "^8.50.0",
+    "typescript": "^5.3.0"
+  }
+}
