@@ -4,10 +4,22 @@ All notable changes to **3DMake GUI** are documented here.
 
 ## [2026.05.01] — Accessibility and Reliability Remediation
 
+### Added
+
+- Added `3DMake: Edit Model` command wired to `3dm edit-model`.
+- Added `Edit Model` to Quick Actions, explorer/editor `.scad` context menus, and keyboard shortcut `Ctrl/Cmd+Alt+E`.
+
+### Improvements
+
+- Reordered Quick Actions so `New Project` appears first for faster project setup.
+
 ### Fixed
 
 - Corrected command argument handling so unsupported global flags are no longer passed to unrelated `3dm` subcommands.
 - Fixed project file argument placement so selected `.scad` paths are appended as positional arguments instead of being inserted between flags.
+- Fixed Edit Model behavior: command now opens `.scad` source files from the current project's `src` folder (prefers `main.scad`) instead of looking for `.stl` files.
+- Build commands now automatically open the generated `.stl` artifact, and Slice now opens generated `.gcode` in the editor when output paths are detected.
+- Setup now opens `defaults.toml` automatically when available, and image export reveals the output folder when image paths are detected.
 - Fixed project tree click behavior: `.stl`, `.svg`, `.gcode`, and `3dmake.toml` entries now open the expected viewer or editor action.
 - Fixed SVG accessibility injection to avoid malformed markup and duplicate `<title>` tags.
 - Fixed status bar run-state updates so running, success, and error states are shown during command execution.
@@ -27,7 +39,7 @@ All notable changes to **3DMake GUI** are documented here.
 
 ## [2026.04.29] — Initial Release
 
-### Added
+### Added (Initial Release)
 
 - Activity bar panel with four tree views: Project, Command Options, Quick Actions, Settings & Tools
 - Full command palette coverage of all `3dm` subcommands

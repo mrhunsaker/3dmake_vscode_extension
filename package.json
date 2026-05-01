@@ -1,8 +1,8 @@
 {
   "name": "vscode-3dmake-gui",
-  "displayName": "3DMake GUI",
-  "description": "Accessibility-focused GUI wrapper for tdeck/3dmake — build, slice, preview, and print OpenSCAD models from VS Code.",
-  "version": "2026.4.29",
+  "displayName": "3DMake VS Code Extension",
+  "description": "Accessibility-focused VS Code extension for tdeck/3dmake — build, slice, preview, and print OpenSCAD models from VS Code.",
+  "version": "2026.5.1",
   "publisher": "mrhunsaker",
   "license": "Apache-2.0",
   "engines": {
@@ -26,7 +26,7 @@
   "icon": "resources/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mrhunsaker/3dmakeGUI"
+    "url": "https://github.com/mrhunsaker/3dmake_vscode_extension"
   },
   "contributes": {
     "viewsContainers": {
@@ -114,7 +114,7 @@
       },
       {
         "command": "3dmake.runEditModel",
-        "title": "3DMake: Edit Model",
+        "title": "3DMake: Open/Edit Source",
         "category": "3DMake"
       },
       {
@@ -334,6 +334,20 @@
           "type": "boolean",
           "default": true,
           "description": "Show an information/error notification when a command finishes, for screen reader users."
+        },
+        "3dmake.projectViewFileMode": {
+          "type": "string",
+          "default": "all",
+          "enum": [
+            "all",
+            "relevant"
+          ],
+          "enumDescriptions": [
+            "Show all files and folders in the selected project tree.",
+            "Show only 3DMake-relevant files (.scad, .toml, .stl, .gcode, .svg) and folders that contain them."
+          ],
+          "description": "Controls whether the Project view shows every file or only 3DMake-relevant files.",
+          "scope": "window"
         }
       }
     },

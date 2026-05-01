@@ -10,6 +10,8 @@
  */
 
 import * as vscode from "vscode";
+import * as path from "path";
+import * as fs from "fs";
 import { ProjectViewProvider } from "./panel/ProjectViewProvider";
 import { CommandOptionsProvider } from "./panel/CommandOptionsProvider";
 import { QuickActionsProvider } from "./panel/QuickActionsProvider";
@@ -50,6 +52,11 @@ export function activate(context: vscode.ExtensionContext): void {
       "3dmake.settingsView",
       settingsProvider,
     ),
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("3dmake.projectViewFileMode")) {
+        projectProvider.refresh();
+      }
+    }),
   );
 
   // ── Helper: register a command that calls runner ─────────────────
@@ -86,12 +93,48 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   // ── Core build/process commands ───────────────────────────────────
-  reg("3dmake.runBuild", () =>
-    runner.run("build", [], { injectGlobalFlags: true }),
-  );
-  reg("3dmake.runSlice", () =>
-    runner.run("slice", [], { injectGlobalFlags: true }),
-  );
+  const openLastStlIfAvailable = (): void => {
+    const stlPath = config.getLastStlPath();
+    if (stlPath) {
+      StlViewerPanel.createOrShow(context.extensionUri, stlPath);
+    }
+  };
+
+  const openLastGcodeIfAvailable = async (): Promise<void> => {
+    const gcodePath = config.getLastGcodePath();
+    if (!gcodePath) {
+      return;
+    }
+    const doc = await vscode.workspace.openTextDocument(
+      vscode.Uri.file(gcodePath),
+    );
+    await vscode.window.showTextDocument(doc);
+  };
+
+  const openGlobalConfigInEditor = async (): Promise<void> => {
+    const cfgPath = config.getGlobalConfigPath();
+    if (cfgPath) {
+      const doc = await vscode.workspace.openTextDocument(
+        vscode.Uri.file(cfgPath),
+      );
+      await vscode.window.showTextDocument(doc);
+    } else {
+      vscode.window.showWarningMessage(
+        "3DMake: Could not locate defaults.toml. Run Setup first.",
+      );
+    }
+  };
+
+  reg("3dmake.runBuild", async () => {
+    config.setLastStlPath(undefined);
+    await runner.run("build", [], { injectGlobalFlags: true });
+    openLastStlIfAvailable();
+  });
+  reg("3dmake.runSlice", async () => {
+    config.setLastGcodePath(undefined);
+    await runner.run("slice", [], { injectGlobalFlags: true });
+    await openLastGcodeIfAvailable();
+  });
   reg("3dmake.runOrient", () => runner.run("orient"));
   reg("3dmake.runPreview", async () => {
     await runner.run("preview", [], { injectGlobalFlags: true });
@@ -104,16 +147,110 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }
   });
-  reg("3dmake.runBuildSlice", () =>
-    runner.run("build", ["--slice"], { injectGlobalFlags: true }),
-  );
-  reg("3dmake.runFullPipeline", () =>
-    runner.run("build", ["--orient", "--slice"], { injectGlobalFlags: true }),
-  );
+  reg("3dmake.runBuildSlice", async () => {
+    config.setLastStlPath(undefined);
+    await runner.run("build", ["--slice"], { injectGlobalFlags: true });
+    openLastStlIfAvailable();
+  });
+  reg("3dmake.runFullPipeline", async () => {
+    config.setLastStlPath(undefined);
+    await runner.run("build", ["--orient", "--slice"], {
+      injectGlobalFlags: true,
+    });
+    openLastStlIfAvailable();
+  });
   reg("3dmake.runInfo", () => runner.run("info"));
   reg("3dmake.runPrint", () => runner.run("print"));
-  reg("3dmake.runEditModel", () => runner.run("edit-model"));
-  reg("3dmake.runImageExport", () => runner.run("images"));
+  reg("3dmake.runEditModel", async (_resource?: vscode.Uri) => {
+    const openInEditor = async (scadPath: string): Promise<void> => {
+      await vscode.commands.executeCommand(
+        "vscode.open",
+        vscode.Uri.file(scadPath),
+      );
+    };
+
+    const projectPath = config.getProjectPath();
+    const projectRoot = projectPath
+      ? fs.statSync(projectPath).isDirectory()
+        ? projectPath
+        : path.dirname(projectPath)
+      : vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+    if (!projectRoot) {
+      vscode.window.showWarningMessage(
+        '3DMake: No project selected. Run "Select Project" first.',
+      );
+      return;
+    }
+
+    const srcDir = path.join(projectRoot, "src");
+    let scadFiles: string[] = [];
+
+    try {
+      scadFiles = fs
+        .readdirSync(srcDir, { withFileTypes: true })
+        .filter(
+          (entry) =>
+            entry.isFile() && entry.name.toLowerCase().endsWith(".scad"),
+        )
+        .map((entry) => path.join(srcDir, entry.name));
+    } catch {
+      // If src/ cannot be read, fall through to the warning below.
+    }
+
+    if (scadFiles.length === 0) {
+      vscode.window.showWarningMessage(
+        `3DMake: No .scad file found in ${srcDir}.`,
+      );
+      return;
+    }
+
+    const mainScad = scadFiles.find(
+      (filePath) => path.basename(filePath).toLowerCase() === "main.scad",
+    );
+    if (mainScad) {
+      await openInEditor(mainScad);
+      return;
+    }
+
+    if (scadFiles.length === 1) {
+      await openInEditor(scadFiles[0]);
+      return;
+    }
+
+    const picked = await vscode.window.showQuickPick(
+      scadFiles.map((filePath) => ({
+        label: path.basename(filePath),
+        description: filePath,
+        filePath,
+      })),
+      {
+        title: "Select OpenSCAD source file",
+        placeHolder: "Choose a .scad file from the project src folder",
+      },
+    );
+
+    if (picked?.filePath) {
+      await openInEditor(picked.filePath);
+    }
+  });
+  reg("3dmake.runImageExport", async () => {
+    config.setLastImageExportDir(undefined);
+    await runner.run("images");
+
+    const exportDir = config.getLastImageExportDir();
+    if (!exportDir) {
+      return;
+    }
+
+    const exportUri = vscode.Uri.file(exportDir);
+    try {
+      await vscode.commands.executeCommand("revealInExplorer", exportUri);
+    } catch {
+      // Fallback for paths that cannot be revealed in workspace explorer.
+      await vscode.commands.executeCommand("revealFileInOS", exportUri);
+    }
+  });
 
   // ── Project scaffolding ───────────────────────────────────────────
   reg("3dmake.runNew", async () => {
@@ -122,16 +259,47 @@ export function activate(context: vscode.ExtensionContext): void {
       placeHolder: "my-part",
     });
     if (name !== undefined) {
-      await runner.run("new", [], {
+      const rawValue = name.trim();
+      if (!rawValue) {
+        await runner.run("new", [], {
+          injectGlobalFlags: false,
+          includeProjectPathArg: false,
+        });
+        return;
+      }
+
+      const home =
+        (process.env.USERPROFILE ??
+        process.env.HOME ??
+        (process.env.HOMEDRIVE && process.env.HOMEPATH))
+          ? `${process.env.HOMEDRIVE}${process.env.HOMEPATH}`
+          : "";
+
+      let normalized = rawValue;
+      if (home) {
+        normalized = normalized.replace(/^~(?=$|[\\/])/, home);
+        normalized = normalized.replace(/^\$HOME(?=$|[\\/])/, home);
+        normalized = normalized.replace(/^\$\{HOME\}(?=$|[\\/])/, home);
+      }
+
+      normalized = normalized.replace(
+        /%USERPROFILE%/gi,
+        process.env.USERPROFILE ?? "",
+      );
+
+      // Pass the target directory as a positional arg to avoid interactive prompt parsing issues.
+      await runner.run("new", [path.normalize(normalized)], {
         injectGlobalFlags: false,
         includeProjectPathArg: false,
-        stdinText: `${name.trim()}\n`,
       });
     }
   });
 
   // ── Tooling / environment commands ───────────────────────────────
-  reg("3dmake.runSetup", () => runner.run("setup"));
+  reg("3dmake.runSetup", async () => {
+    await runner.run("setup");
+    await openGlobalConfigInEditor();
+  });
   reg("3dmake.runListLibraries", () => runner.run("libraries", ["--list"]));
   reg("3dmake.runInstallLibraries", () =>
     runner.run("libraries", ["--install"]),
@@ -207,17 +375,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   reg("3dmake.openGlobalConfig", async () => {
-    const cfgPath = config.getGlobalConfigPath();
-    if (cfgPath) {
-      const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(cfgPath),
-      );
-      await vscode.window.showTextDocument(doc);
-    } else {
-      vscode.window.showWarningMessage(
-        "3DMake: Could not locate defaults.toml. Run Setup first.",
-      );
-    }
+    await openGlobalConfigInEditor();
   });
 
   reg("3dmake.openProjectConfig", async () => {

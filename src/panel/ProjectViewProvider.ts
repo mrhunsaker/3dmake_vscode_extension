@@ -17,13 +17,23 @@ import * as fs from "fs";
 import * as path from "path";
 import { ConfigManager } from "../utils/ConfigManager";
 
+const RELEVANT_EXTENSIONS = new Set([
+  ".scad",
+  ".toml",
+  ".stl",
+  ".gcode",
+  ".svg",
+]);
+
 type ItemKind =
   | "projectRoot"
+  | "directory"
   | "scadFile"
   | "tomlFile"
   | "stlFile"
   | "gcodeFile"
   | "svgFile"
+  | "otherFile"
   | "placeholder";
 
 export class ProjectItem extends vscode.TreeItem {
@@ -38,11 +48,13 @@ export class ProjectItem extends vscode.TreeItem {
 
     const iconMap: Partial<Record<ItemKind, vscode.ThemeIcon>> = {
       projectRoot: new vscode.ThemeIcon("folder-opened"),
+      directory: new vscode.ThemeIcon("folder"),
       scadFile: new vscode.ThemeIcon("file-code"),
       tomlFile: new vscode.ThemeIcon("settings-gear"),
       stlFile: new vscode.ThemeIcon("file-binary"),
       gcodeFile: new vscode.ThemeIcon("file"),
       svgFile: new vscode.ThemeIcon("file-media"),
+      otherFile: new vscode.ThemeIcon("file"),
       placeholder: new vscode.ThemeIcon("info"),
     };
     this.iconPath = iconMap[kind] ?? new vscode.ThemeIcon("file");
@@ -80,17 +92,25 @@ export class ProjectItem extends vscode.TreeItem {
           title: "View SVG preview",
           arguments: [filePath],
         };
+      } else if (kind === "otherFile") {
+        this.command = {
+          command: "vscode.open",
+          title: "Open file",
+          arguments: [vscode.Uri.file(filePath)],
+        };
       }
     }
 
     // Accessible label — more descriptive than the bare filename
     const kindLabels: Record<ItemKind, string> = {
       projectRoot: "Project folder",
+      directory: "Folder",
       scadFile: "OpenSCAD source file",
       tomlFile: "3DMake configuration file",
       stlFile: "STL output file",
       gcodeFile: "G-code output file",
       svgFile: "SVG preview file",
+      otherFile: "File",
       placeholder: "Information",
     };
     this.accessibilityInformation = {
@@ -121,9 +141,10 @@ export class ProjectViewProvider implements vscode.TreeDataProvider<ProjectItem>
 
   getChildren(element?: ProjectItem): ProjectItem[] {
     if (element) {
-      // Expand project root to show files
-      return element.kind === "projectRoot" && element.filePath
-        ? this.buildFileItems(element.filePath)
+      // Expand project root and nested folders
+      return (element.kind === "projectRoot" || element.kind === "directory") &&
+        element.filePath
+        ? this.buildDirectoryItems(element.filePath)
         : [];
     }
 
@@ -150,7 +171,9 @@ export class ProjectViewProvider implements vscode.TreeDataProvider<ProjectItem>
     return [root];
   }
 
-  private buildFileItems(dirPath: string): ProjectItem[] {
+  private buildDirectoryItems(dirPath: string): ProjectItem[] {
+    const showAllFiles = this.config.getProjectViewFileMode() === "all";
+
     let entries: fs.Dirent[];
     try {
       entries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -167,19 +190,75 @@ export class ProjectViewProvider implements vscode.TreeDataProvider<ProjectItem>
       ".svg": "svgFile",
     };
 
-    for (const entry of entries.filter((e) => e.isFile())) {
-      const ext = path.extname(entry.name).toLowerCase();
-      const kind = extMap[ext];
-      if (kind) {
-        items.push(
-          new ProjectItem(entry.name, kind, path.join(dirPath, entry.name)),
-        );
+    const dirs = entries
+      .filter((e) => e.isDirectory())
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const entry of dirs) {
+      const nestedPath = path.join(dirPath, entry.name);
+      if (!showAllFiles && !this.directoryContainsRelevantFiles(nestedPath)) {
+        continue;
       }
+      items.push(
+        new ProjectItem(
+          entry.name,
+          "directory",
+          nestedPath,
+          vscode.TreeItemCollapsibleState.Collapsed,
+        ),
+      );
+    }
+
+    const files = entries
+      .filter((e) => e.isFile())
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const entry of files) {
+      const ext = path.extname(entry.name).toLowerCase();
+      const kind = extMap[ext] ?? "otherFile";
+      if (!showAllFiles && kind === "otherFile") {
+        continue;
+      }
+      items.push(
+        new ProjectItem(entry.name, kind, path.join(dirPath, entry.name)),
+      );
     }
 
     if (items.length === 0) {
-      items.push(new ProjectItem("No relevant files found", "placeholder"));
+      items.push(
+        new ProjectItem(
+          showAllFiles ? "No files found" : "No relevant files found",
+          "placeholder",
+        ),
+      );
     }
     return items;
+  }
+
+  private directoryContainsRelevantFiles(dirPath: string): boolean {
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    } catch {
+      return false;
+    }
+
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (RELEVANT_EXTENSIONS.has(ext)) {
+          return true;
+        }
+      }
+
+      if (entry.isDirectory()) {
+        const nestedPath = path.join(dirPath, entry.name);
+        if (this.directoryContainsRelevantFiles(nestedPath)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }

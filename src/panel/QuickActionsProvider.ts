@@ -86,10 +86,10 @@ const ACTIONS: ActionDef[] = [
     a11yLabel: "Send G-code to printer.",
   },
   {
-    label: "Edit Model",
+    label: "Open/Edit Source",
     command: "3dmake.runEditModel",
     icon: "edit",
-    a11yLabel: "Open interactive model editing for the current project.",
+    a11yLabel: "Open or edit a source .scad file for the current project.",
   },
   {
     label: "View STL",

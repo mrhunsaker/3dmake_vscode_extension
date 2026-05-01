@@ -56,31 +56,31 @@ Key design decisions:
 
 ## Screenshots / Panel Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │  Activity Bar                                           │
 │  ┌──────────────────────────────────────────────────┐   │
-│  │ 🗂 3DMake                                         │   │
-│  │  ▼ PROJECT                                       │   │
-│  │    📂 my-part/                                    │   │
-│  │      📄 my-part.scad                             │   │
-│  │      ⚙  3dmake.toml                              │   │
-│  │      📦 my-part.stl                              │   │
-│  │  ▼ COMMAND OPTIONS                               │   │
-│  │    ✏  Model (-m)       -m cap                    │   │
-│  │    ✏  View (-v)        -v 3sil                   │   │
-│  │    ✏  Profile (-p)     (default)                 │   │
-│  │    ✏  Overlay (-o)     (default)                 │   │
-│  │  ▼ QUICK ACTIONS                                 │   │
-│  │    ▶  Build STL                                  │   │
-│  │    ◉  Slice                                      │   │
-│  │    👁  Preview (SVG)                              │   │
-│  │    🚀 Full Pipeline                              │   │
-│  │    …                                             │   │
-│  │  ▼ SETTINGS & TOOLS                              │   │
-│  │    ⚙  Set 3dm Binary Path                        │   │
-│  │    📄 Open Global Config                         │   │
-│  │    …                                             │   │
+│  │ 3DMake                                           │   │
+│  │  PROJECT                                         │   │
+│  │    my-part/                                      │   │
+│  │      my-part.scad                                │   │
+│  │      3dmake.toml                                 │   │
+│  │      my-part.stl                                 │   │
+│  │  COMMAND OPTIONS                                 │   │
+│  │    Model (-m)       -m cap                       │   │
+│  │    View (-v)        -v 3sil                      │   │
+│  │    Profile (-p)     (default)                    │   │
+│  │    Overlay (-o)     (default)                    │   │
+│  │  QUICK ACTIONS                                   │   │
+│  │    Build STL                                     │   │
+│  │    Slice                                         │   │
+│  │    Preview (SVG)                                 │   │
+│  │    Full Pipeline                                 │   │
+│  │    ...                                           │   │
+│  │  SETTINGS & TOOLS                                │   │
+│  │    Set 3dm Binary Path                           │   │
+│  │    Open Global Config                            │   │
+│  │    ...                                           │   │
 │  └──────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -193,24 +193,22 @@ npx vsce package
 
 `vsce` reads `package.json`, bundles everything not excluded by `.vscodeignore`, and writes a file named:
 
-```
+```plaintext
 vscode-3dmake-gui-<version>.vsix
 ```
 
 in the project root. For version `2026.4.29` the output file is:
 
-```
+```plaintest
 vscode-3dmake-gui-2026.4.29.vsix
 ```
 
 > **Common packaging errors:**
 >
-> | Error                    | Fix                                                                             |
-> | ------------------------ | ------------------------------------------------------------------------------- |
-> | `Missing publisher name` | Ensure `"publisher"` is set in `package.json`. Use any string for local builds. |
-> | `icon not found`         | Place a 128×128 PNG at `resources/icon.png` (see note below).                   |
-> | `README.md not found`    | The README must exist at the project root — it does in this repo.               |
-> | TypeScript errors        | Run `npm run compile` first and fix all errors.                                 |
+> - `Missing publisher name`: Ensure `"publisher"` in `package.json` is an identifier (for example `mrhunsaker`), not a human-friendly display name.
+> - `icon not found`: Place a 128x128 PNG at `resources/icon.png` (see note below).
+> - `README.md not found`: The README must exist at the project root, which it does in this repo.
+> - `TypeScript errors`: Run `npm run compile` first and fix all errors.
 
 ### Note on the icon
 
@@ -312,17 +310,18 @@ All commands are available in the **Command Palette** (`Ctrl+Shift+P`) under the
 | Command                                          | Description                                                |
 | ------------------------------------------------ | ---------------------------------------------------------- |
 | `3DMake: Select Project File or Directory`       | Opens a file picker to choose the active project           |
-| `3DMake: Build STL`                              | Runs `3dm build`                                           |
-| `3DMake: Slice`                                  | Runs `3dm slice`                                           |
+| `3DMake: Build STL`                              | Runs `3dm build` and opens the generated `.stl` in viewer  |
+| `3DMake: Slice`                                  | Runs `3dm slice` and opens generated `.gcode` in editor    |
 | `3DMake: Orient`                                 | Runs `3dm orient` (auto-orient for print bed)              |
 | `3DMake: Preview (SVG)`                          | Runs `3dm preview` and generates an SVG silhouette         |
-| `3DMake: Build + Slice`                          | Runs `3dm build --slice`                                   |
-| `3DMake: Full Pipeline (Build + Orient + Slice)` | Runs `3dm build --orient --slice`                          |
+| `3DMake: Build + Slice`                          | Runs `3dm build --slice` and opens generated `.stl`        |
+| `3DMake: Full Pipeline (Build + Orient + Slice)` | Runs `3dm build --orient --slice` and opens `.stl`         |
 | `3DMake: Describe (Info)`                        | Runs `3dm info` to print model metadata                    |
 | `3DMake: Print`                                  | Runs `3dm print` to send G-code to the printer             |
-| `3DMake: Export Images`                          | Runs `3dm images`                                          |
+| `3DMake: Open/Edit Source`                       | Opens the project `src/*.scad` source file in the editor   |
+| `3DMake: Export Images`                          | Runs `3dm images` and reveals export folder when detected  |
 | `3DMake: New Project`                            | Prompts for a name and runs `3dm new <name>`               |
-| `3DMake: Run Setup`                              | Runs `3dm setup`                                           |
+| `3DMake: Run Setup`                              | Runs `3dm setup` and opens `defaults.toml` when available  |
 | `3DMake: List Libraries`                         | Runs `3dm libraries --list`                                |
 | `3DMake: Install Libraries`                      | Runs `3dm libraries --install`                             |
 | `3DMake: List Profiles`                          | Runs `3dm profiles`                                        |
@@ -345,6 +344,7 @@ All commands are available in the **Command Palette** (`Ctrl+Shift+P`) under the
 | Shortcut                   | Command            | Active when            |
 | -------------------------- | ------------------ | ---------------------- |
 | `Ctrl+Alt+B` / `Cmd+Alt+B` | Build STL          | Active file is `.scad` |
+| `Ctrl+Alt+E` / `Cmd+Alt+E` | Open/Edit Source   | Active file is `.scad` |
 | `Ctrl+Alt+P` / `Cmd+Alt+P` | Preview (SVG)      | Active file is `.scad` |
 | `Ctrl+Alt+O` / `Cmd+Alt+O` | Select Project     | Always                 |
 | `Ctrl+Alt+V` / `Cmd+Alt+V` | View STL           | Active file is `.stl`  |
@@ -381,12 +381,12 @@ All shortcuts can be re-bound via **File → Preferences → Keyboard Shortcuts*
 
 Right-click context menus are added to:
 
-| Location       | File type     | Items added              |
-| -------------- | ------------- | ------------------------ |
-| Explorer panel | `.scad`       | Build STL, Preview (SVG) |
-| Editor         | `.scad`       | Build STL, Preview (SVG) |
-| Explorer panel | `.stl`        | View in 3D Viewer        |
-| Explorer panel | `3dmake.toml` | Open Project Config      |
+| Location       | File type     | Items added                                |
+| -------------- | ------------- | ------------------------------------------ |
+| Explorer panel | `.scad`       | Build STL, Open/Edit Source, Preview (SVG) |
+| Editor         | `.scad`       | Build STL, Open/Edit Source, Preview (SVG) |
+| Explorer panel | `.stl`        | View in 3D Viewer                          |
+| Explorer panel | `3dmake.toml` | Open Project Config                        |
 
 ---
 

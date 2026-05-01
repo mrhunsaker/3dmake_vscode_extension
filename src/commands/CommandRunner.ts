@@ -117,8 +117,8 @@ export class CommandRunner {
             this.output.appendLine(line);
           }
         }
-        // Track SVG paths for the viewer command
-        this.trackSvgOutput(chunk);
+        // Track generated artifact paths for follow-up open/view commands.
+        this.trackOutputPaths(chunk, cwd);
       });
 
       proc.stderr.on("data", (chunk: string) => {
@@ -164,14 +164,64 @@ export class CommandRunner {
     });
   }
 
-  // ── SVG detection ─────────────────────────────────────────────────
-  private trackSvgOutput(chunk: string): void {
-    const matches = chunk.matchAll(/([^\s'\"]+\.svg)/gi);
+  private trackOutputPaths(chunk: string, cwd?: string): void {
+    this.trackExtensionOutput(chunk, "svg", cwd, (p) =>
+      this.config.setLastSvgPath(p),
+    );
+    this.trackExtensionOutput(chunk, "stl", cwd, (p) =>
+      this.config.setLastStlPath(p),
+    );
+    this.trackExtensionOutput(chunk, "gcode", cwd, (p) =>
+      this.config.setLastGcodePath(p),
+    );
+    this.trackImageExportOutput(chunk, cwd);
+  }
+
+  private trackExtensionOutput(
+    chunk: string,
+    extension: string,
+    cwd: string | undefined,
+    onFound: (resolvedPath: string) => void,
+  ): void {
+    const escapedExt = extension.replace(".", "\\.");
+    const matches = chunk.matchAll(
+      new RegExp(`([^\\s'\\\"]+\\.${escapedExt})`, "gi"),
+    );
     for (const match of matches) {
-      const svgPath = match[1];
-      if (fs.existsSync(svgPath)) {
-        this.config.setLastSvgPath(svgPath);
+      const resolvedPath = this.resolveExistingOutputPath(match[1], cwd);
+      if (resolvedPath) {
+        onFound(resolvedPath);
       }
+    }
+  }
+
+  private resolveExistingOutputPath(
+    rawPath: string,
+    cwd: string | undefined,
+  ): string | undefined {
+    const cleanedPath = rawPath.trim();
+    if (!cleanedPath) {
+      return undefined;
+    }
+
+    if (path.isAbsolute(cleanedPath) && fs.existsSync(cleanedPath)) {
+      return cleanedPath;
+    }
+
+    if (!cwd) {
+      return undefined;
+    }
+
+    const resolvedFromCwd = path.resolve(cwd, cleanedPath);
+    return fs.existsSync(resolvedFromCwd) ? resolvedFromCwd : undefined;
+  }
+
+  private trackImageExportOutput(chunk: string, cwd: string | undefined): void {
+    const imageExtensions = ["png", "jpg", "jpeg", "webp", "bmp", "gif"];
+    for (const extension of imageExtensions) {
+      this.trackExtensionOutput(chunk, extension, cwd, (p) => {
+        this.config.setLastImageExportDir(path.dirname(p));
+      });
     }
   }
 }
