@@ -20,6 +20,12 @@ interface ActionDef {
 
 const ACTIONS: ActionDef[] = [
   {
+    label: "New Project",
+    command: "3dmake.runNew",
+    icon: "new-folder",
+    a11yLabel: "Scaffold a new 3DMake project.",
+  },
+  {
     label: "Select Project",
     command: "3dmake.selectProject",
     icon: "folder-opened",
@@ -80,6 +86,12 @@ const ACTIONS: ActionDef[] = [
     a11yLabel: "Send G-code to printer.",
   },
   {
+    label: "Edit Model",
+    command: "3dmake.runEditModel",
+    icon: "edit",
+    a11yLabel: "Open interactive model editing for the current project.",
+  },
+  {
     label: "View STL",
     command: "3dmake.viewStl",
     icon: "symbol-structure",
@@ -91,12 +103,6 @@ const ACTIONS: ActionDef[] = [
     command: "3dmake.viewLastSvg",
     icon: "file-media",
     a11yLabel: "View the last generated SVG silhouette preview.",
-  },
-  {
-    label: "New Project",
-    command: "3dmake.runNew",
-    icon: "new-folder",
-    a11yLabel: "Scaffold a new 3DMake project.",
   },
   {
     label: "Export Images",

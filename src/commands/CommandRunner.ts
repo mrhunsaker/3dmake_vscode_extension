@@ -23,6 +23,7 @@ import { StatusBarManager } from "../utils/StatusBarManager";
 interface RunOptions {
   injectGlobalFlags?: boolean;
   includeProjectPathArg?: boolean;
+  stdinText?: string;
 }
 
 export class CommandRunner {
@@ -43,9 +44,11 @@ export class CommandRunner {
   ): Promise<void> {
     const injectGlobalFlags = options.injectGlobalFlags ?? false;
     const includeProjectPathArg = options.includeProjectPathArg ?? true;
+    const stdinText = options.stdinText;
     const globalFlags = injectGlobalFlags ? this.config.buildGlobalFlags() : [];
     await this.runRaw([subcommand, ...globalFlags, ...extraArgs], {
       includeProjectPathArg,
+      stdinText,
     });
   }
 
@@ -56,6 +59,7 @@ export class CommandRunner {
     const binary = this.config.getEffectiveBinaryPath();
     const projectPath = this.config.getProjectPath();
     const includeProjectPathArg = options.includeProjectPathArg ?? true;
+    const stdinText = options.stdinText;
 
     // Determine working directory
     let cwd: string | undefined;
@@ -98,6 +102,11 @@ export class CommandRunner {
         env: { ...process.env },
         shell: process.platform === "win32", // needed on Windows for PATH resolution
       });
+
+      if (typeof stdinText === "string") {
+        proc.stdin.write(stdinText);
+        proc.stdin.end();
+      }
 
       proc.stdout.setEncoding("utf8");
       proc.stderr.setEncoding("utf8");

@@ -112,19 +112,20 @@ export function activate(context: vscode.ExtensionContext): void {
   );
   reg("3dmake.runInfo", () => runner.run("info"));
   reg("3dmake.runPrint", () => runner.run("print"));
+  reg("3dmake.runEditModel", () => runner.run("edit-model"));
   reg("3dmake.runImageExport", () => runner.run("images"));
 
   // ── Project scaffolding ───────────────────────────────────────────
   reg("3dmake.runNew", async () => {
     const name = await vscode.window.showInputBox({
-      prompt: "New project name",
+      prompt: "New project directory name (leave blank for current directory)",
       placeHolder: "my-part",
-      validateInput: (v) => (v.trim() === "" ? "Name cannot be empty" : null),
     });
-    if (name) {
-      await runner.run("new", [name], {
+    if (name !== undefined) {
+      await runner.run("new", [], {
         injectGlobalFlags: false,
         includeProjectPathArg: false,
+        stdinText: `${name.trim()}\n`,
       });
     }
   });

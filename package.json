@@ -113,6 +113,11 @@
         "category": "3DMake"
       },
       {
+        "command": "3dmake.runEditModel",
+        "title": "3DMake: Edit Model",
+        "category": "3DMake"
+      },
+      {
         "command": "3dmake.runNew",
         "title": "3DMake: New Project",
         "category": "3DMake"
@@ -207,6 +212,12 @@
         "when": "resourceExtname == '.scad'"
       },
       {
+        "command": "3dmake.runEditModel",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e",
+        "when": "resourceExtname == '.scad'"
+      },
+      {
         "command": "3dmake.runPreview",
         "key": "ctrl+alt+p",
         "mac": "cmd+alt+p",
@@ -237,19 +248,24 @@
           "group": "3dmake@1"
         },
         {
-          "command": "3dmake.runPreview",
+          "command": "3dmake.runEditModel",
           "when": "resourceExtname == '.scad'",
           "group": "3dmake@2"
         },
         {
+          "command": "3dmake.runPreview",
+          "when": "resourceExtname == '.scad'",
+          "group": "3dmake@3"
+        },
+        {
           "command": "3dmake.viewStl",
           "when": "resourceExtname == '.stl'",
-          "group": "3dmake@3"
+          "group": "3dmake@4"
         },
         {
           "command": "3dmake.openProjectConfig",
           "when": "resourceFilename == '3dmake.toml'",
-          "group": "3dmake@4"
+          "group": "3dmake@5"
         }
       ],
       "editor/context": [
@@ -259,9 +275,14 @@
           "group": "3dmake@1"
         },
         {
-          "command": "3dmake.runPreview",
+          "command": "3dmake.runEditModel",
           "when": "resourceExtname == '.scad'",
           "group": "3dmake@2"
+        },
+        {
+          "command": "3dmake.runPreview",
+          "when": "resourceExtname == '.scad'",
+          "group": "3dmake@3"
         }
       ],
       "view/title": [
