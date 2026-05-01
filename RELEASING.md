@@ -43,6 +43,29 @@ Before publishing, validate key accessibility paths:
 3. Publish using configured workflow/tooling (for example `npm run publish` if applicable).
 4. Tag the release in source control and include release notes.
 
+## Automated Release Script
+
+For local maintainer releases, you can run the root-level PowerShell script:
+
+```powershell
+./release.ps1 -Version patch
+```
+
+Supported `-Version` values include standard npm semver increments such as `patch`, `minor`, `major`, or an explicit version like `2026.5.2`.
+
+The script will:
+
+1. Verify the git working tree is clean.
+2. Bump the version in `package.json` and `package-lock.json`.
+3. Run `npm run compile`, `npm run lint`, and `npm run package`.
+4. Commit the version bump, create a `v<version>` git tag, and push both to the configured remote.
+5. Publish the generated `.vsix` with `npx vsce publish --packagePath ...`.
+
+Authentication notes:
+
+1. `vsce publish` requires an authenticated publisher account.
+2. You can either log in with `npx vsce login mrhunsaker` ahead of time, or set the `VSCE_PAT` environment variable before running the script.
+
 ## Post-Release
 
 1. Verify install/update from the published artifact.

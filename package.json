@@ -34,7 +34,7 @@
         {
           "id": "3dmake-explorer",
           "title": "3DMake",
-          "icon": "resources/activitybar.svg"
+          "icon": "resources/activitybar.png"
         }
       ]
     },
@@ -43,25 +43,25 @@
         {
           "id": "3dmake.projectView",
           "name": "Project",
-          "icon": "resources/activitybar.svg",
+          "icon": "resources/activitybar.png",
           "contextualTitle": "3DMake Project"
         },
         {
           "id": "3dmake.commandOptions",
           "name": "Command Options",
-          "icon": "resources/activitybar.svg",
+          "icon": "resources/activitybar.png",
           "contextualTitle": "3DMake Command Options"
         },
         {
           "id": "3dmake.quickActions",
           "name": "Quick Actions",
-          "icon": "resources/activitybar.svg",
+          "icon": "resources/activitybar.png",
           "contextualTitle": "3DMake Quick Actions"
         },
         {
           "id": "3dmake.settingsView",
           "name": "Settings & Tools",
-          "icon": "resources/activitybar.svg",
+          "icon": "resources/activitybar.png",
           "contextualTitle": "3DMake Settings"
         }
       ]

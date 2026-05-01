@@ -1,0 +1,6 @@
+title: 3DMake VS Code Extension
+description: Accessibility-first VS Code extension for 3dmake and OpenSCAD workflows.
+baseurl: /3dmake_vscode_extension
+url: https://mrhunsaker.github.io
+theme: minima
+markdown: kramdown
