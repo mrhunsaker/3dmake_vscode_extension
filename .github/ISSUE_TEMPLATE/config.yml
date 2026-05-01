@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Community Discussion
+    url: https://github.com/mrhunsaker/3dmake_vscode_extension/discussions
+    about: Ask questions or start broader conversations in Discussions.

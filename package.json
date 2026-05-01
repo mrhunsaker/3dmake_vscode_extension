@@ -202,30 +202,30 @@
     "keybindings": [
       {
         "command": "3dmake.runBuild",
-        "key": "ctrl+shift+b",
-        "mac": "cmd+shift+b",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
         "when": "resourceExtname == '.scad'"
       },
       {
         "command": "3dmake.runPreview",
-        "key": "ctrl+shift+p",
-        "mac": "cmd+shift+p",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
         "when": "resourceExtname == '.scad'"
       },
       {
         "command": "3dmake.runCustomCommand",
-        "key": "ctrl+shift+x",
-        "mac": "cmd+shift+x"
+        "key": "ctrl+alt+x",
+        "mac": "cmd+alt+x"
       },
       {
         "command": "3dmake.selectProject",
-        "key": "ctrl+shift+o",
-        "mac": "cmd+shift+o"
+        "key": "ctrl+alt+o",
+        "mac": "cmd+alt+o"
       },
       {
         "command": "3dmake.viewStl",
-        "key": "ctrl+shift+v",
-        "mac": "cmd+shift+v",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
         "when": "resourceExtname == '.stl'"
       }
     ],
@@ -346,8 +346,12 @@
     "publish": "vsce publish",
     "test": "node ./out/test/runTest.js"
   },
+  "dependencies": {
+    "three": "^0.128.0"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/three": "^0.128.0",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",

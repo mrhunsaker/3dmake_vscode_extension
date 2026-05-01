@@ -18,9 +18,10 @@ import { spawn } from "child_process";
 import * as path from "path";
 import * as fs from "fs";
 import { ConfigManager } from "../utils/ConfigManager";
+import { StatusBarManager } from "../utils/StatusBarManager";
 
 interface RunOptions {
-  includeGlobalFlags?: boolean;
+  injectGlobalFlags?: boolean;
   includeProjectPathArg?: boolean;
 }
 
@@ -28,6 +29,7 @@ export class CommandRunner {
   constructor(
     private readonly output: vscode.OutputChannel,
     private readonly config: ConfigManager,
+    private readonly statusBar: StatusBarManager,
   ) {}
 
   /**
@@ -39,11 +41,9 @@ export class CommandRunner {
     extraArgs: string[] = [],
     options: RunOptions = {},
   ): Promise<void> {
-    const includeGlobalFlags = options.includeGlobalFlags ?? true;
+    const injectGlobalFlags = options.injectGlobalFlags ?? false;
     const includeProjectPathArg = options.includeProjectPathArg ?? true;
-    const globalFlags = includeGlobalFlags
-      ? this.config.buildGlobalFlags()
-      : [];
+    const globalFlags = injectGlobalFlags ? this.config.buildGlobalFlags() : [];
     await this.runRaw([subcommand, ...globalFlags, ...extraArgs], {
       includeProjectPathArg,
     });
@@ -76,8 +76,9 @@ export class CommandRunner {
       !allArgs.includes(projectPath) &&
       !allArgs.includes(path.basename(projectPath))
     ) {
-      // Many 3dm subcommands accept the file as a positional — insert after subcommand
-      allArgs.splice(1, 0, projectPath);
+      // Keep the selected project file as a positional argument at the end so
+      // subcommand flags remain grouped and parser order is predictable.
+      allArgs.push(projectPath);
     }
 
     if (this.config.shouldShowOutputOnRun()) {
@@ -91,6 +92,7 @@ export class CommandRunner {
     this.output.appendLine("─".repeat(60));
 
     return new Promise<void>((resolve) => {
+      this.statusBar.setState("running");
       const proc = spawn(binary, allArgs, {
         cwd: cwd,
         env: { ...process.env },
@@ -123,6 +125,7 @@ export class CommandRunner {
           ? `3dm binary not found at "${binary}". Use "3DMake: Set 3dm Binary Path" to configure it.`
           : `Failed to start 3dm: ${err.message}`;
         this.output.appendLine(`✖ ${msg}`);
+        this.statusBar.setState("error");
         if (this.config.shouldAnnounceCompletion()) {
           vscode.window.showErrorMessage(`3DMake Error: ${msg}`);
         }
@@ -131,6 +134,7 @@ export class CommandRunner {
 
       proc.on("close", (code) => {
         this.output.appendLine("─".repeat(60));
+        this.statusBar.setState(code === 0 ? "success" : "error");
         if (code === 0) {
           this.output.appendLine(`✔ ${allArgs[0]} completed successfully.`);
           if (this.config.shouldAnnounceCompletion()) {
@@ -153,9 +157,8 @@ export class CommandRunner {
 
   // ── SVG detection ─────────────────────────────────────────────────
   private trackSvgOutput(chunk: string): void {
-    // Look for lines like "Wrote /path/to/preview.svg" or similar
-    const match = chunk.match(/(?:wrote?|output|created?)[:\s]+([^\s]+\.svg)/i);
-    if (match) {
+    const matches = chunk.matchAll(/([^\s'\"]+\.svg)/gi);
+    for (const match of matches) {
       const svgPath = match[1];
       if (fs.existsSync(svgPath)) {
         this.config.setLastSvgPath(svgPath);

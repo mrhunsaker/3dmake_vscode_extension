@@ -2,28 +2,16 @@
  * StlViewerPanel
  *
  * A VS Code WebviewPanel that renders an STL file in 3D using Three.js.
- *
- * Accessibility features:
- *  - The panel title includes the filename for screen reader window/tab navigation.
- *  - A skip-to-controls link allows keyboard users to bypass the 3D canvas.
- *  - Keyboard controls (arrow keys, +/−, R) are documented in an on-screen
- *    help section and announced via an aria-live region.
- *  - A text description section below the canvas lists bounding-box dimensions
- *    and vertex count so non-visual users can understand the model's properties.
- *  - High-contrast CSS custom properties are used; the viewer respects
- *    VS Code's color theme.
- *  - The canvas element carries role="img" and a dynamic aria-label that
- *    updates when the camera position changes.
  */
 
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as path from "path";
 
 export class StlViewerPanel {
   private static instance: StlViewerPanel | undefined;
 
   private readonly panel: vscode.WebviewPanel;
+  private readonly extensionUri: vscode.Uri;
   private stlPath: string;
 
   static createOrShow(extensionUri: vscode.Uri, stlPath: string): void {
@@ -32,6 +20,7 @@ export class StlViewerPanel {
       StlViewerPanel.instance.panel.reveal(vscode.ViewColumn.Beside);
       return;
     }
+
     const panel = vscode.window.createWebviewPanel(
       "3dmake.stlViewer",
       `STL Viewer — ${path.basename(stlPath)}`,
@@ -41,15 +30,22 @@ export class StlViewerPanel {
         localResourceRoots: [
           extensionUri,
           vscode.Uri.file(path.dirname(stlPath)),
+          vscode.Uri.joinPath(extensionUri, "node_modules", "three", "build"),
         ],
         retainContextWhenHidden: true,
       },
     );
-    StlViewerPanel.instance = new StlViewerPanel(panel, stlPath);
+
+    StlViewerPanel.instance = new StlViewerPanel(panel, extensionUri, stlPath);
   }
 
-  private constructor(panel: vscode.WebviewPanel, stlPath: string) {
+  private constructor(
+    panel: vscode.WebviewPanel,
+    extensionUri: vscode.Uri,
+    stlPath: string,
+  ) {
     this.panel = panel;
+    this.extensionUri = extensionUri;
     this.stlPath = stlPath;
     this.render();
     this.panel.onDidDispose(() => {
@@ -63,14 +59,20 @@ export class StlViewerPanel {
     this.render();
   }
 
-  private getStlDataUri(): string {
-    const data = fs.readFileSync(this.stlPath);
-    return `data:application/octet-stream;base64,${data.toString("base64")}`;
-  }
-
   private render(): void {
-    const stlDataUri = this.getStlDataUri();
     const fileName = path.basename(this.stlPath);
+    const stlUri = this.panel.webview.asWebviewUri(
+      vscode.Uri.file(this.stlPath),
+    );
+    const threeUri = this.panel.webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this.extensionUri,
+        "node_modules",
+        "three",
+        "build",
+        "three.min.js",
+      ),
+    );
 
     this.panel.webview.html = /* html */ `<!DOCTYPE html>
 <html lang="en">
@@ -93,7 +95,6 @@ export class StlViewerPanel {
       font-size: var(--vscode-font-size, 13px);
       display: flex; flex-direction: column; height: 100vh; overflow: hidden;
     }
-    /* Skip link — visible on focus only */
     #skip-link {
       position: absolute; top: -100px; left: 0; z-index: 999;
       background: var(--btn-bg); color: var(--btn-fg);
@@ -106,8 +107,10 @@ export class StlViewerPanel {
       padding: 6px 10px; border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
     }
-    #toolbar h1 { font-size: 13px; font-weight: 600; flex: 1; min-width: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #toolbar h1 {
+      font-size: 13px; font-weight: 600; flex: 1; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     button {
       background: var(--btn-bg); color: var(--btn-fg);
       border: none; border-radius: 3px; padding: 4px 10px;
@@ -147,21 +150,20 @@ export class StlViewerPanel {
 <div id="toolbar" role="toolbar" aria-label="STL Viewer controls">
   <h1 aria-label="Viewing STL file: ${fileName}">${fileName}</h1>
   <button id="btn-reset" title="Reset camera to default position (R)">Reset View (R)</button>
-  <button id="btn-top"   title="Top-down view (T)">Top (T)</button>
+  <button id="btn-top" title="Top-down view (T)">Top (T)</button>
   <button id="btn-front" title="Front view (F)">Front (F)</button>
-  <button id="btn-iso"   title="Isometric view (I)">Isometric (I)</button>
+  <button id="btn-iso" title="Isometric view (I)">Isometric (I)</button>
   <button id="btn-wireframe" title="Toggle wireframe overlay (W)">Wireframe (W)</button>
 </div>
 
 <div id="canvas-container" role="region" aria-label="3D model viewer canvas">
-  <canvas id="stl-canvas" role="img" aria-label="3D STL model: ${fileName}. Use arrow keys to orbit, plus and minus to zoom."></canvas>
+  <canvas id="stl-canvas" role="img" tabindex="0" aria-label="3D STL model: ${fileName}. Use arrow keys to orbit, plus and minus to zoom."></canvas>
   <div id="controls-help" aria-hidden="true">
     Arrow keys: orbit &nbsp;|&nbsp; +/−: zoom &nbsp;|&nbsp; Shift+drag: pan<br>
     R: reset &nbsp;|&nbsp; T: top &nbsp;|&nbsp; F: front &nbsp;|&nbsp; I: iso &nbsp;|&nbsp; W: wireframe
   </div>
 </div>
 
-<!-- aria-live region for screen reader announcements -->
 <div id="live-region" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <div id="model-info" role="region" aria-label="Model information">
@@ -169,16 +171,14 @@ export class StlViewerPanel {
   <div id="info-text">Loading…</div>
 </div>
 
-<!-- Three.js r128 from CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="${threeUri}"></script>
 <script>
 (function() {
-  const STL_DATA_URI = "${stlDataUri}";
+  const STL_URI = "${stlUri}";
   const canvas = document.getElementById('stl-canvas');
   const liveRegion = document.getElementById('live-region');
   const infoText = document.getElementById('info-text');
 
-  // ── Three.js scene setup ─────────────────────────────────────────
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(window.devicePixelRatio);
 
@@ -186,11 +186,11 @@ export class StlViewerPanel {
   scene.background = new THREE.Color(0x1e1e2e);
 
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 10000);
-  let mesh, wireframeMesh;
+  let mesh;
+  let wireframeMesh;
   let showWireframe = false;
   let modelSize = 1;
 
-  // Lights
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambientLight);
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
@@ -200,7 +200,6 @@ export class StlViewerPanel {
   backLight.position.set(-1, -1, -1);
   scene.add(backLight);
 
-  // ── Parse STL from data URI ─────────────────────────────────────
   function parseStlBinary(buffer) {
     const view = new DataView(buffer);
     const numTris = view.getUint32(80, true);
@@ -208,28 +207,34 @@ export class StlViewerPanel {
     const verts = new Float32Array(numTris * 9);
     const norms = new Float32Array(numTris * 9);
     let offset = 84;
+
     for (let i = 0; i < numTris; i++) {
       const nx = view.getFloat32(offset, true);
-      const ny = view.getFloat32(offset+4, true);
-      const nz = view.getFloat32(offset+8, true);
+      const ny = view.getFloat32(offset + 4, true);
+      const nz = view.getFloat32(offset + 8, true);
       offset += 12;
+
       for (let v = 0; v < 3; v++) {
-        const base = i*9 + v*3;
-        verts[base]   = view.getFloat32(offset, true);
-        verts[base+1] = view.getFloat32(offset+4, true);
-        verts[base+2] = view.getFloat32(offset+8, true);
-        norms[base]   = nx; norms[base+1] = ny; norms[base+2] = nz;
+        const base = i * 9 + v * 3;
+        verts[base] = view.getFloat32(offset, true);
+        verts[base + 1] = view.getFloat32(offset + 4, true);
+        verts[base + 2] = view.getFloat32(offset + 8, true);
+        norms[base] = nx;
+        norms[base + 1] = ny;
+        norms[base + 2] = nz;
         offset += 12;
       }
-      offset += 2; // attribute byte count
+
+      offset += 2;
     }
+
     geometry.setAttribute('position', new THREE.BufferAttribute(verts, 3));
     geometry.setAttribute('normal', new THREE.BufferAttribute(norms, 3));
     return geometry;
   }
 
   function loadStl() {
-    fetch(STL_DATA_URI)
+    return fetch(STL_URI)
       .then(r => r.arrayBuffer())
       .then(buf => {
         const geometry = parseStlBinary(buf);
@@ -249,14 +254,16 @@ export class StlViewerPanel {
         });
         mesh = new THREE.Mesh(geometry, material);
 
-        const wMat = new THREE.MeshBasicMaterial({
-          color: 0x88ccff, wireframe: true, opacity: 0.15, transparent: true,
+        const wireMat = new THREE.MeshBasicMaterial({
+          color: 0x88ccff,
+          wireframe: true,
+          opacity: 0.15,
+          transparent: true,
         });
-        wireframeMesh = new THREE.Mesh(geometry, wMat);
+        wireframeMesh = new THREE.Mesh(geometry, wireMat);
         wireframeMesh.visible = false;
         mesh.add(wireframeMesh);
 
-        // Centre mesh
         const centre = new THREE.Vector3();
         bb.getCenter(centre);
         mesh.position.sub(centre);
@@ -264,14 +271,19 @@ export class StlViewerPanel {
 
         resetCamera();
 
-        // Update info panel
         const triCount = geometry.attributes.position.count / 3;
         infoText.innerHTML =
-          \`<strong>File:</strong> ${fileName}<br>\` +
-          \`<strong>Triangles:</strong> \${triCount.toLocaleString()}<br>\` +
-          \`<strong>Bounding box:</strong> X \${size.x.toFixed(2)} mm &times; Y \${size.y.toFixed(2)} mm &times; Z \${size.z.toFixed(2)} mm\`;
-        announce(\`Model loaded. \${triCount.toLocaleString()} triangles. \` +
-          \`Dimensions: X \${size.x.toFixed(1)}, Y \${size.y.toFixed(1)}, Z \${size.z.toFixed(1)} millimetres.\`);
+          '<strong>File:</strong> ${fileName}<br>' +
+          '<strong>Triangles:</strong> ' + triCount.toLocaleString() + '<br>' +
+          '<strong>Bounding box:</strong> X ' + size.x.toFixed(2) + ' mm &times; Y ' + size.y.toFixed(2) + ' mm &times; Z ' + size.z.toFixed(2) + ' mm';
+
+        announce(
+          'Model loaded. ' + triCount.toLocaleString() +
+          ' triangles. Dimensions: X ' + size.x.toFixed(1) +
+          ', Y ' + size.y.toFixed(1) + ', Z ' + size.z.toFixed(1) + ' millimetres.'
+        );
+
+        canvas.focus();
       })
       .catch(err => {
         infoText.textContent = 'Error loading STL: ' + err.message;
@@ -279,19 +291,34 @@ export class StlViewerPanel {
       });
   }
 
-  // ── Camera helpers ───────────────────────────────────────────────
-  let theta = 45, phi = 60, radius;
+  let theta = 45;
+  let phi = 60;
+  let radius;
+
   function resetCamera() {
     radius = modelSize * 2.5;
-    theta = 45; phi = 60;
+    theta = 45;
+    phi = 60;
     updateCamera();
     announce('Camera reset to isometric view.');
   }
+
   function setView(t, p, label) {
-    theta = t; phi = p;
+    theta = t;
+    phi = p;
     updateCamera();
     announce('Camera set to ' + label + ' view.');
   }
+
+  function updateCanvasLabel() {
+    canvas.setAttribute(
+      'aria-label',
+      '3D STL model: ${fileName}. Camera: theta ' + Math.round(theta) +
+      ' degrees, phi ' + Math.round(phi) + ' degrees, distance ' +
+      Math.round(radius) + 'mm.'
+    );
+  }
+
   function updateCamera() {
     const tRad = THREE.MathUtils.degToRad(theta);
     const pRad = THREE.MathUtils.degToRad(phi);
@@ -301,85 +328,109 @@ export class StlViewerPanel {
       radius * Math.sin(pRad) * Math.cos(tRad),
     );
     camera.lookAt(0, 0, 0);
+    updateCanvasLabel();
   }
 
-  // ── Orbit via pointer ────────────────────────────────────────────
-  let dragging = false, lastX = 0, lastY = 0, shiftDrag = false;
+  let dragging = false;
+  let lastX = 0;
+  let lastY = 0;
+  let shiftDrag = false;
   const panOffset = new THREE.Vector3();
+
   canvas.addEventListener('pointerdown', e => {
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
-    shiftDrag = e.shiftKey; canvas.setPointerCapture(e.pointerId);
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    shiftDrag = e.shiftKey;
+    canvas.setPointerCapture(e.pointerId);
   });
+
   canvas.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    const dx = e.clientX - lastX, dy = e.clientY - lastY;
-    lastX = e.clientX; lastY = e.clientY;
+    if (!dragging) {
+      return;
+    }
+
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+
     if (shiftDrag) {
       panOffset.x -= dx * 0.005 * (radius / modelSize);
       panOffset.y += dy * 0.005 * (radius / modelSize);
-      if (mesh) mesh.position.set(panOffset.x, panOffset.y, panOffset.z);
+      if (mesh) {
+        mesh.position.set(panOffset.x, panOffset.y, panOffset.z);
+      }
     } else {
-      theta -= dx * 0.4; phi = Math.max(5, Math.min(175, phi - dy * 0.4));
+      theta -= dx * 0.4;
+      phi = Math.max(5, Math.min(175, phi - dy * 0.4));
       updateCamera();
     }
   });
-  canvas.addEventListener('pointerup', () => { dragging = false; });
+
+  canvas.addEventListener('pointerup', () => {
+    dragging = false;
+  });
+
   canvas.addEventListener('wheel', e => {
     radius = Math.max(modelSize * 0.5, radius + e.deltaY * 0.05 * (radius / 200));
-    updateCamera(); e.preventDefault();
+    updateCamera();
+    e.preventDefault();
   }, { passive: false });
 
-  // ── Keyboard orbit ───────────────────────────────────────────────
-  window.addEventListener('keydown', e => {
+  // Keyboard events scoped to canvas only — prevents interference with screen reader global navigation
+  canvas.addEventListener('keydown', e => {
     const step = 5;
-    if (e.key === 'ArrowLeft')  { theta -= step; updateCamera(); }
+    if (e.key === 'ArrowLeft') { theta -= step; updateCamera(); }
     if (e.key === 'ArrowRight') { theta += step; updateCamera(); }
-    if (e.key === 'ArrowUp')    { phi = Math.max(5, phi - step); updateCamera(); }
-    if (e.key === 'ArrowDown')  { phi = Math.min(175, phi + step); updateCamera(); }
-    if (e.key === '+' || e.key === '=') { radius = Math.max(modelSize*0.5, radius * 0.9); updateCamera(); }
+    if (e.key === 'ArrowUp') { phi = Math.max(5, phi - step); updateCamera(); }
+    if (e.key === 'ArrowDown') { phi = Math.min(175, phi + step); updateCamera(); }
+    if (e.key === '+' || e.key === '=') { radius = Math.max(modelSize * 0.5, radius * 0.9); updateCamera(); }
     if (e.key === '-') { radius *= 1.1; updateCamera(); }
-    if (e.key === 'r' || e.key === 'R') resetCamera();
-    if (e.key === 't' || e.key === 'T') setView(0, 1, 'top');
-    if (e.key === 'f' || e.key === 'F') setView(0, 90, 'front');
-    if (e.key === 'i' || e.key === 'I') setView(45, 60, 'isometric');
-    if (e.key === 'w' || e.key === 'W') toggleWireframe();
+    if (e.key === 'r' || e.key === 'R') { resetCamera(); }
+    if (e.key === 't' || e.key === 'T') { setView(0, 1, 'top'); }
+    if (e.key === 'f' || e.key === 'F') { setView(0, 90, 'front'); }
+    if (e.key === 'i' || e.key === 'I') { setView(45, 60, 'isometric'); }
+    if (e.key === 'w' || e.key === 'W') { toggleWireframe(); }
   });
 
   function toggleWireframe() {
     showWireframe = !showWireframe;
-    if (wireframeMesh) wireframeMesh.visible = showWireframe;
+    if (wireframeMesh) {
+      wireframeMesh.visible = showWireframe;
+    }
     announce('Wireframe ' + (showWireframe ? 'enabled' : 'disabled'));
   }
 
-  // ── Toolbar buttons ──────────────────────────────────────────────
   document.getElementById('btn-reset').addEventListener('click', resetCamera);
   document.getElementById('btn-top').addEventListener('click', () => setView(0, 1, 'top'));
   document.getElementById('btn-front').addEventListener('click', () => setView(0, 90, 'front'));
   document.getElementById('btn-iso').addEventListener('click', () => setView(45, 60, 'isometric'));
   document.getElementById('btn-wireframe').addEventListener('click', toggleWireframe);
 
-  // ── Resize ───────────────────────────────────────────────────────
   function resize() {
     const container = document.getElementById('canvas-container');
-    const w = container.clientWidth, h = container.clientHeight;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
+
   window.addEventListener('resize', resize);
   resize();
 
-  // ── Render loop ──────────────────────────────────────────────────
   function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
   }
   animate();
 
-  // ── Accessibility announce ────────────────────────────────────────
   function announce(msg) {
     liveRegion.textContent = '';
-    requestAnimationFrame(() => { liveRegion.textContent = msg; });
+    requestAnimationFrame(() => {
+      liveRegion.textContent = msg;
+    });
   }
 
   loadStl();

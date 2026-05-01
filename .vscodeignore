@@ -3,10 +3,15 @@
 src/**
 .gitignore
 .eslintrc.json
+CONTRIBUTING.md
+RELEASING.md
+STYLE.md
 **/*.map
 **/*.ts
 !dist/**
 tsconfig.json
 node_modules/**
+!node_modules/three/build/three.min.js
 .github/**
 *.vsix
+remediation.json

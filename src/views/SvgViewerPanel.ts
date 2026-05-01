@@ -10,9 +10,17 @@
  *  - A text description section is reserved for SVG alt-text extraction.
  */
 
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as vscode from "vscode";
+import * as fs from "fs";
+import * as path from "path";
+
+function escHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;");
+}
 
 export class SvgViewerPanel {
   private static instance: SvgViewerPanel | undefined;
@@ -25,7 +33,7 @@ export class SvgViewerPanel {
       return;
     }
     const panel = vscode.window.createWebviewPanel(
-      '3dmake.svgViewer',
+      "3dmake.svgViewer",
       `SVG Preview — ${path.basename(svgPath)}`,
       { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false },
       { enableScripts: true, retainContextWhenHidden: true },
@@ -36,17 +44,30 @@ export class SvgViewerPanel {
   private constructor(panel: vscode.WebviewPanel, svgPath: string) {
     this.panel = panel;
     this.render(svgPath);
-    this.panel.onDidDispose(() => { SvgViewerPanel.instance = undefined; });
+    this.panel.onDidDispose(() => {
+      SvgViewerPanel.instance = undefined;
+    });
   }
 
   private render(svgPath: string): void {
-    let svgContent = '';
+    let svgContent = "";
     try {
-      svgContent = fs.readFileSync(svgPath, 'utf8');
-      // Inject a <title> for accessibility if none present
-      if (!svgContent.includes('<title')) {
-        svgContent = svgContent.replace('<svg', `<svg aria-label="Silhouette preview of ${path.basename(svgPath)}" role="img"`);
-        svgContent = svgContent.replace(/(<svg[^>]*>)/, `$1<title>Silhouette preview: ${path.basename(svgPath)}</title>`);
+      svgContent = fs.readFileSync(svgPath, "utf8");
+      const fileLabel = escHtml(path.basename(svgPath));
+      const needsRole = !svgContent.includes('role="img"');
+      const needsTitle = !/<title[\s>]/i.test(svgContent);
+
+      if (needsRole) {
+        svgContent = svgContent.replace(
+          /<svg(\s|>)/,
+          `<svg role="img" aria-label="Silhouette preview of ${fileLabel}"$1`,
+        );
+      }
+      if (needsTitle) {
+        svgContent = svgContent.replace(
+          /(<svg[^>]*>)/,
+          `$1<title>Silhouette preview: ${fileLabel}</title>`,
+        );
       }
     } catch {
       svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
@@ -55,7 +76,7 @@ export class SvgViewerPanel {
 
     const fileName = path.basename(svgPath);
 
-    this.panel.webview.html = /* html */`<!DOCTYPE html>
+    this.panel.webview.html = /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>

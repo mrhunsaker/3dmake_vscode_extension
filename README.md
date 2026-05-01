@@ -28,7 +28,11 @@ An accessibility-first Visual Studio Code extension that wraps the [`3dm` / tdec
 - [OpenSCAD Syntax Highlighting](#openscad-syntax-highlighting)
 - [Accessibility Design](#accessibility-design)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
+- [How to Contribute](#how-to-contribute)
+- [Project Docs Map](#project-docs-map)
+- [Code of Conduct](#code-of-conduct)
+- [Security](#security)
+- [Releasing](#releasing)
 - [License](#license)
 
 ---
@@ -54,10 +58,10 @@ Key design decisions:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Activity Bar                                            │
+│  Activity Bar                                           │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │ 🗂 3DMake                                         │   │
-│  │  ▼ PROJECT                                        │   │
+│  │  ▼ PROJECT                                       │   │
 │  │    📂 my-part/                                    │   │
 │  │      📄 my-part.scad                             │   │
 │  │      ⚙  3dmake.toml                              │   │
@@ -91,8 +95,6 @@ Key design decisions:
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Visual Studio Code** ≥ 1.85 | [Download](https://code.visualstudio.com/)                                                                                                                            |
 | **`3dm` binary**              | Install via your system package manager or download from the tdeck/3dmake project releases. Must be on your `PATH` or configured via the `3dmake.binaryPath` setting. |
-| **OpenSCAD**                  | Required by `3dm build`. Install from [openscad.org](https://openscad.org/).                                                                                          |
-| **A slicer** (optional)       | Required only for `3dm slice`. PrusaSlicer / SuperSlicer / OrcaSlicer are supported depending on your `3dm` profile configuration.                                    |
 
 ### Build requirements (only if building from source)
 
@@ -115,7 +117,7 @@ If you have received a pre-built `.vsix` file:
 2. Open the Extensions view: `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (macOS).
 3. Click the **`···`** (More Actions) button at the top-right of the Extensions panel.
 4. Select **Install from VSIX…**
-5. Navigate to and select `vscode-3dmake-gui-2026.04.29.vsix`.
+5. Navigate to and select `vscode-3dmake-gui-2026.4.29.vsix`.
 6. Click **Install**.
 7. Reload VS Code when prompted.
 
@@ -128,7 +130,7 @@ If you have received a pre-built `.vsix` file:
 ### Method 3 — Terminal
 
 ```bash
-code --install-extension vscode-3dmake-gui-2026.04.29.vsix
+code --install-extension vscode-3dmake-gui-2026.4.29.vsix
 ```
 
 ---
@@ -198,7 +200,7 @@ vscode-3dmake-gui-<version>.vsix
 in the project root. For version `2026.4.29` the output file is:
 
 ```
-vscode-3dmake-gui-2026.04.29.vsix
+vscode-3dmake-gui-2026.4.29.vsix
 ```
 
 > **Common packaging errors:**
@@ -278,7 +280,7 @@ Shows the currently selected project (a `.scad` file or a directory containing o
 
 Use the **Refresh** button (↺ icon in the view title bar) to re-scan the directory.
 
-To select a project, click **Select Project** in the Quick Actions view, or press `Ctrl+Shift+O`.
+To select a project, click **Select Project** in the Quick Actions view, or press `Ctrl+Alt+O`.
 
 ### Command Options View
 
@@ -340,13 +342,13 @@ All commands are available in the **Command Palette** (`Ctrl+Shift+P`) under the
 
 ## Keyboard Shortcuts
 
-| Shortcut                       | Command            | Active when            |
-| ------------------------------ | ------------------ | ---------------------- |
-| `Ctrl+Shift+B` / `Cmd+Shift+B` | Build STL          | Active file is `.scad` |
-| `Ctrl+Shift+P` / `Cmd+Shift+P` | Preview (SVG)      | Active file is `.scad` |
-| `Ctrl+Shift+O` / `Cmd+Shift+O` | Select Project     | Always                 |
-| `Ctrl+Shift+V` / `Cmd+Shift+V` | View STL           | Active file is `.stl`  |
-| `Ctrl+Shift+X` / `Cmd+Shift+X` | Run Custom Command | Always                 |
+| Shortcut                   | Command            | Active when            |
+| -------------------------- | ------------------ | ---------------------- |
+| `Ctrl+Alt+B` / `Cmd+Alt+B` | Build STL          | Active file is `.scad` |
+| `Ctrl+Alt+P` / `Cmd+Alt+P` | Preview (SVG)      | Active file is `.scad` |
+| `Ctrl+Alt+O` / `Cmd+Alt+O` | Select Project     | Always                 |
+| `Ctrl+Alt+V` / `Cmd+Alt+V` | View STL           | Active file is `.stl`  |
+| `Ctrl+Alt+X` / `Cmd+Alt+X` | Run Custom Command | Always                 |
 
 All shortcuts can be re-bound via **File → Preferences → Keyboard Shortcuts** and searching for `3DMake`.
 
@@ -441,6 +443,8 @@ Installing this extension also registers a language definition for `.scad` files
 
 This extension was built to be fully usable with screen readers and keyboard-only navigation. The following mechanisms are used:
 
+Keyboard shortcuts intentionally avoid VS Code's built-in accessibility-critical bindings (such as Command Palette and Build Task defaults) so global screen reader workflows remain intact.
+
 ### VS Code Output Channel
 
 All `3dm` subprocess output streams live into a named Output Channel (`3DMake`). VS Code's Output Channel is an `aria-live` polite region — screen readers announce new lines as they arrive without interrupting the current reading focus.
@@ -505,7 +509,13 @@ Create a placeholder icon (see [Note on the icon](#note-on-the-icon) above) or c
 
 ---
 
-## Contributing
+## How to Contribute
+
+Contributor onboarding docs:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) - workflow, PR expectations, and review process
+- [STYLE.md](STYLE.md) - coding and documentation style rules for this repository
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - community behavior and moderation standards
 
 1. Fork the repository and create a feature branch.
 2. Make changes in `src/`.
@@ -513,6 +523,40 @@ Create a placeholder icon (see [Note on the icon](#note-on-the-icon) above) or c
 4. Run `npm run lint`.
 5. Test manually using `F5` in VS Code (Run Extension launch configuration).
 6. Open a pull request describing what changed and why.
+
+---
+
+## Project Docs Map
+
+Project process and governance documentation:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [STYLE.md](STYLE.md)
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- [SECURITY.md](SECURITY.md)
+- [RELEASING.md](RELEASING.md)
+- [.github/MAINTAINER_CHECKLIST.md](.github/MAINTAINER_CHECKLIST.md)
+- [.github/pull_request_template.md](.github/pull_request_template.md)
+- [.github/ISSUE_TEMPLATE](.github/ISSUE_TEMPLATE)
+- [.github/DISCUSSION_TEMPLATE](.github/DISCUSSION_TEMPLATE)
+
+---
+
+## Code of Conduct
+
+This project follows the standards in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+---
+
+## Security
+
+For vulnerability reporting, supported versions, and response expectations, see [SECURITY.md](SECURITY.md).
+
+---
+
+## Releasing
+
+For maintainers and release managers, use [RELEASING.md](RELEASING.md) for the pre-release checklist and publish workflow.
 
 ---
 

@@ -24,8 +24,8 @@ export function activate(context: vscode.ExtensionContext): void {
   // ── Shared services ──────────────────────────────────────────────
   const outputChannel = vscode.window.createOutputChannel("3DMake");
   const config = new ConfigManager();
-  const runner = new CommandRunner(outputChannel, config);
   const statusBar = new StatusBarManager(context);
+  const runner = new CommandRunner(outputChannel, config, statusBar);
 
   // ── Tree view providers ──────────────────────────────────────────
   const projectProvider = new ProjectViewProvider(context, config);
@@ -53,7 +53,10 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   // ── Helper: register a command that calls runner ─────────────────
-  function reg(id: string, fn: () => Promise<void> | void): void {
+  function reg<TArgs extends unknown[]>(
+    id: string,
+    fn: (...args: TArgs) => Promise<void> | void,
+  ): void {
     context.subscriptions.push(vscode.commands.registerCommand(id, fn));
   }
 
@@ -78,14 +81,34 @@ export function activate(context: vscode.ExtensionContext): void {
 
   reg("3dmake.refreshProjectView", () => projectProvider.refresh());
 
+  reg("3dmake.setOption", async (key: string) => {
+    await optionsProvider.editOption(key);
+  });
+
   // ── Core build/process commands ───────────────────────────────────
-  reg("3dmake.runBuild", () => runner.run("build"));
-  reg("3dmake.runSlice", () => runner.run("slice"));
+  reg("3dmake.runBuild", () =>
+    runner.run("build", [], { injectGlobalFlags: true }),
+  );
+  reg("3dmake.runSlice", () =>
+    runner.run("slice", [], { injectGlobalFlags: true }),
+  );
   reg("3dmake.runOrient", () => runner.run("orient"));
-  reg("3dmake.runPreview", () => runner.run("preview"));
-  reg("3dmake.runBuildSlice", () => runner.run("build", ["--slice"]));
+  reg("3dmake.runPreview", async () => {
+    await runner.run("preview", [], { injectGlobalFlags: true });
+    const svgPath = config.getLastSvgPath();
+    if (svgPath) {
+      try {
+        SvgViewerPanel.createOrShow(context.extensionUri, svgPath);
+      } catch {
+        // Keep command completion behavior intact even if viewer render fails.
+      }
+    }
+  });
+  reg("3dmake.runBuildSlice", () =>
+    runner.run("build", ["--slice"], { injectGlobalFlags: true }),
+  );
   reg("3dmake.runFullPipeline", () =>
-    runner.run("build", ["--orient", "--slice"]),
+    runner.run("build", ["--orient", "--slice"], { injectGlobalFlags: true }),
   );
   reg("3dmake.runInfo", () => runner.run("info"));
   reg("3dmake.runPrint", () => runner.run("print"));
@@ -100,7 +123,7 @@ export function activate(context: vscode.ExtensionContext): void {
     });
     if (name) {
       await runner.run("new", [name], {
-        includeGlobalFlags: false,
+        injectGlobalFlags: false,
         includeProjectPathArg: false,
       });
     }
@@ -133,32 +156,32 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   // ── Viewer commands ───────────────────────────────────────────────
-  reg("3dmake.viewStl", async () => {
+  reg("3dmake.viewStl", async (stlPath?: string) => {
     // If a .stl file is active in the editor, use it; otherwise ask
     const activeFile = vscode.window.activeTextEditor?.document.uri.fsPath;
-    let stlPath: string | undefined;
+    let resolvedStlPath: string | undefined = stlPath?.trim();
 
-    if (activeFile?.toLowerCase().endsWith(".stl")) {
-      stlPath = activeFile;
-    } else {
+    if (!resolvedStlPath && activeFile?.toLowerCase().endsWith(".stl")) {
+      resolvedStlPath = activeFile;
+    } else if (!resolvedStlPath) {
       const uris = await vscode.window.showOpenDialog({
         canSelectFiles: true,
         canSelectMany: false,
         openLabel: "Open STL file",
         filters: { "STL Files": ["stl"] },
       });
-      stlPath = uris?.[0]?.fsPath;
+      resolvedStlPath = uris?.[0]?.fsPath;
     }
 
-    if (stlPath) {
-      StlViewerPanel.createOrShow(context.extensionUri, stlPath);
+    if (resolvedStlPath) {
+      StlViewerPanel.createOrShow(context.extensionUri, resolvedStlPath);
     }
   });
 
-  reg("3dmake.viewLastSvg", () => {
-    const svgPath = config.getLastSvgPath();
-    if (svgPath) {
-      SvgViewerPanel.createOrShow(context.extensionUri, svgPath);
+  reg("3dmake.viewLastSvg", (svgPath?: string) => {
+    const resolvedSvgPath = svgPath?.trim() || config.getLastSvgPath();
+    if (resolvedSvgPath) {
+      SvgViewerPanel.createOrShow(context.extensionUri, resolvedSvgPath);
     } else {
       vscode.window.showWarningMessage(
         "3DMake: No SVG preview available yet. Run Preview first.",

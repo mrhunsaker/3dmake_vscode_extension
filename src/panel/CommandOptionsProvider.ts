@@ -8,8 +8,8 @@
  * users can set the value without leaving the keyboard.
  */
 
-import * as vscode from 'vscode';
-import { ConfigManager } from '../utils/ConfigManager';
+import * as vscode from "vscode";
+import { ConfigManager } from "../utils/ConfigManager";
 
 export class OptionItem extends vscode.TreeItem {
   constructor(
@@ -21,38 +21,33 @@ export class OptionItem extends vscode.TreeItem {
   ) {
     super(displayLabel, vscode.TreeItemCollapsibleState.None);
 
-    this.description = currentValue ? `${cliFlag} ${currentValue}` : '(default)';
-    this.tooltip = `${description}\nCurrent: ${currentValue || '(using default)'}`;
-    this.iconPath = new vscode.ThemeIcon('edit');
+    this.description = currentValue
+      ? `${cliFlag} ${currentValue}`
+      : "(default)";
+    this.tooltip = `${description}\nCurrent: ${currentValue || "(using default)"}`;
+    this.iconPath = new vscode.ThemeIcon("edit");
     this.command = {
-      command: '3dmake.setOption',
+      command: "3dmake.setOption",
       title: `Set ${displayLabel}`,
       arguments: [optionKey],
     };
     this.accessibilityInformation = {
-      label: `${displayLabel}, ${cliFlag} flag, current value: ${currentValue || 'default'}. Activate to edit.`,
-      role: 'treeitem',
+      label: `${displayLabel}, ${cliFlag} flag, current value: ${currentValue || "default"}. Activate to edit.`,
+      role: "treeitem",
     };
   }
 }
 
 export class CommandOptionsProvider implements vscode.TreeDataProvider<OptionItem> {
-  private _onDidChange = new vscode.EventEmitter<OptionItem | undefined | void>();
+  private _onDidChange = new vscode.EventEmitter<
+    OptionItem | undefined | void
+  >();
   readonly onDidChangeTreeData = this._onDidChange.event;
 
-  // Register the inline setOption command within this provider
-  private disposable: vscode.Disposable;
-
   constructor(
-    private readonly context: vscode.ExtensionContext,
+    private readonly _context: vscode.ExtensionContext,
     private readonly config: ConfigManager,
-  ) {
-    this.disposable = vscode.commands.registerCommand(
-      '3dmake.setOption',
-      async (key: string) => this.editOption(key),
-    );
-    context.subscriptions.push(this.disposable);
-  }
+  ) {}
 
   refresh(): void {
     this._onDidChange.fire();
@@ -65,64 +60,75 @@ export class CommandOptionsProvider implements vscode.TreeDataProvider<OptionIte
   getChildren(): OptionItem[] {
     return [
       new OptionItem(
-        'model',
-        'Model (-m)',
+        "model",
+        "Model (-m)",
         this.config.getModelOverride() ?? this.config.getDefaultModel(),
-        '-m',
-        'Target model name inside the .scad file.',
+        "-m",
+        "Target model name inside the .scad file.",
       ),
       new OptionItem(
-        'view',
-        'View (-v)',
+        "view",
+        "View (-v)",
         this.config.getViewOverride() ?? this.config.getDefaultView(),
-        '-v',
-        'Silhouette view: 3sil, frontsil, backsil, leftsil, rightsil, topsil.',
+        "-v",
+        "Silhouette view: 3sil, frontsil, backsil, leftsil, rightsil, topsil.",
       ),
       new OptionItem(
-        'profile',
-        'Profile (-p)',
+        "profile",
+        "Profile (-p)",
         this.config.getProfileOverride() ?? this.config.getDefaultProfile(),
-        '-p',
-        'Slicer profile name.',
+        "-p",
+        "Slicer profile name.",
       ),
       new OptionItem(
-        'overlay',
-        'Overlay (-o)',
-        this.config.getOverlayOverride() ?? '',
-        '-o',
-        'Overlay name to apply during build.',
+        "overlay",
+        "Overlay (-o)",
+        this.config.getOverlayOverride() ?? "",
+        "-o",
+        "Overlay name to apply during build.",
       ),
     ];
   }
 
-  private async editOption(key: string): Promise<void> {
+  public async editOption(key: string): Promise<void> {
     const labels: Record<string, string> = {
-      model: 'Model name (-m)',
-      view: 'View (-v) e.g. 3sil, frontsil',
-      profile: 'Slicer profile (-p)',
-      overlay: 'Overlay (-o)',
+      model: "Model name (-m)",
+      view: "View (-v) e.g. 3sil, frontsil",
+      profile: "Slicer profile (-p)",
+      overlay: "Overlay (-o)",
     };
 
     const current: Record<string, string | undefined> = {
       model: this.config.getModelOverride() ?? this.config.getDefaultModel(),
       view: this.config.getViewOverride() ?? this.config.getDefaultView(),
-      profile: this.config.getProfileOverride() ?? this.config.getDefaultProfile(),
+      profile:
+        this.config.getProfileOverride() ?? this.config.getDefaultProfile(),
       overlay: this.config.getOverlayOverride(),
     };
 
     const value = await vscode.window.showInputBox({
       prompt: labels[key] ?? key,
-      value: current[key] ?? '',
-      placeHolder: 'Leave empty to use default',
+      value: current[key] ?? "",
+      placeHolder: "Leave empty to use default",
     });
 
-    if (value === undefined) { return; } // cancelled
+    if (value === undefined) {
+      return;
+    } // cancelled
 
     switch (key) {
-      case 'model':   this.config.setModelOverride(value || undefined); break;
-      case 'view':    this.config.setViewOverride(value || undefined); break;
-      case 'profile': this.config.setProfileOverride(value || undefined); break;
-      case 'overlay': this.config.setOverlayOverride(value || undefined); break;
+      case "model":
+        this.config.setModelOverride(value || undefined);
+        break;
+      case "view":
+        this.config.setViewOverride(value || undefined);
+        break;
+      case "profile":
+        this.config.setProfileOverride(value || undefined);
+        break;
+      case "overlay":
+        this.config.setOverlayOverride(value || undefined);
+        break;
     }
 
     this.refresh();

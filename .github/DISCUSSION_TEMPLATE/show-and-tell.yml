@@ -1,0 +1,26 @@
+title: "Show and Tell: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share how you are using the extension, examples, or workflows.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What You Built
+      placeholder: Describe your project or workflow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Include commands, settings, and tips that may help others.
+
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility Notes
+      description: If relevant, include what worked well for keyboard/screen-reader usage.

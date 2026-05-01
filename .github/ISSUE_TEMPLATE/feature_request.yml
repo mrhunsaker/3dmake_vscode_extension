@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest an enhancement or new capability
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. Please describe the user problem and proposed solution.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What user problem does this solve?
+      placeholder: As a user, I need ... because ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe your preferred approach.
+      placeholder: The extension should ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      placeholder: Any alternatives or tradeoffs considered.
+
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility Considerations
+      description: Explain keyboard/screen-reader implications.
+      placeholder: This should support ...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and discussions for duplicates.
+          required: true
+        - label: This request is focused on one primary feature.
+          required: true

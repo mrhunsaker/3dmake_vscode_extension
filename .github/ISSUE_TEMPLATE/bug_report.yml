@@ -1,0 +1,88 @@
+name: Bug Report
+description: Report a reproducible bug in the extension
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please provide enough detail to reproduce the issue.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: A clear and concise description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps To Reproduce
+      description: Include exact steps and files/settings if relevant.
+      placeholder: |
+        1. Open ...
+        2. Run command ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      placeholder: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility Impact
+      description: If applicable, describe keyboard/screen reader impact.
+      placeholder: Describe any impact on NVDA/JAWS/Narrator/VoiceOver or keyboard-only workflows.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs Or Output
+      description: Paste Output panel logs or terminal output.
+      render: shell
+
+  - type: input
+    id: vscode
+    attributes:
+      label: VS Code Version
+      placeholder: e.g. 1.101.0
+    validations:
+      required: true
+
+  - type: input
+    id: extension
+    attributes:
+      label: Extension Version
+      placeholder: e.g. 2026.4.29
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true

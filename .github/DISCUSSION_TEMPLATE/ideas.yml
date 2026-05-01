@@ -1,0 +1,37 @@
+title: "Idea: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share an idea for improving the extension or contributor workflow.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea Summary
+      placeholder: A concise summary of the idea.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: User Problem
+      description: What problem does this idea address?
+      placeholder: Users currently ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: Suggested Approach
+      description: How might this be implemented?
+      placeholder: We could ...
+
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility Impact
+      description: Describe expected accessibility improvements or risks.
+      placeholder: This should improve keyboard/screen-reader workflow by ...

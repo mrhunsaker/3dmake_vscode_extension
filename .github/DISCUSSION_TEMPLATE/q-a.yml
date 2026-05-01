@@ -1,0 +1,29 @@
+title: "Q&A: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask a question about using or developing this extension.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What do you need help with?
+      placeholder: I am trying to ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Share relevant setup details and what you have already tried.
+      placeholder: VS Code version, OS, extension version, command used, logs, etc.
+
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility Context
+      description: If applicable, include keyboard/screen-reader details.
+      placeholder: NVDA/JAWS/Narrator/VoiceOver behavior, key steps, expected announcement.
