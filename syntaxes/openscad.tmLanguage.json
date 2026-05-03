@@ -8,6 +8,7 @@
     { "include": "#keywords" },
     { "include": "#functions" },
     { "include": "#constants" },
+    { "include": "#special_variables" },
     { "include": "#numbers" },
     { "include": "#operators" }
   ],
@@ -39,11 +40,15 @@
     },
     "functions": {
       "name": "support.function.scad",
-      "match": "\\b(cube|sphere|cylinder|polyhedron|square|circle|polygon|text|linear_extrude|rotate_extrude|translate|rotate|scale|mirror|multmatrix|color|offset|hull|minkowski|union|difference|intersection|projection|render|surface|import|resize|children|child)\\b"
+      "match": "\\b(cube|sphere|cylinder|polyhedron|square|circle|polygon|text|linear_extrude|rotate_extrude|translate|rotate|scale|mirror|multmatrix|color|offset|hull|minkowski|union|difference|intersection|projection|render|surface|import|resize|children|child|abs|sin|cos|tan|asin|acos|atan|atan2|floor|ceil|round|sqrt|pow|log|ln|max|min|norm|cross|concat|len|str|chr|ord|search|lookup|version_num|parent_module|sign|exp|is_undef|is_bool|is_num|is_string|is_list|is_function)\\b"
     },
     "constants": {
       "name": "constant.language.scad",
       "match": "\\b(true|false|undef|PI)\\b"
+    },
+    "special_variables": {
+      "name": "variable.language.scad",
+      "match": "\\$(fn|fa|fs|t|vpt|vpr|vpd|vpf|children|parent_modules|preview|idx)\\b"
     },
     "numbers": {
       "name": "constant.numeric.scad",

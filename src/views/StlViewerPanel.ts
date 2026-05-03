@@ -2,10 +2,14 @@
  * StlViewerPanel
  *
  * A VS Code WebviewPanel that renders an STL file in 3D using Three.js.
+ *
+ * Remediation (2026-05-02):
+ *  P2-04: Detect ASCII STL format and show an accessible error message
+ *         via both the info panel and the aria-live region.
  */
 
-import * as vscode from "vscode";
-import * as path from "path";
+import * as vscode from 'vscode';
+import * as path from 'path';
 
 export class StlViewerPanel {
   private static instance: StlViewerPanel | undefined;
@@ -22,7 +26,7 @@ export class StlViewerPanel {
     }
 
     const panel = vscode.window.createWebviewPanel(
-      "3dmake.stlViewer",
+      '3dmake.stlViewer',
       `STL Viewer — ${path.basename(stlPath)}`,
       { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false },
       {
@@ -30,7 +34,7 @@ export class StlViewerPanel {
         localResourceRoots: [
           extensionUri,
           vscode.Uri.file(path.dirname(stlPath)),
-          vscode.Uri.joinPath(extensionUri, "node_modules", "three", "build"),
+          vscode.Uri.joinPath(extensionUri, 'node_modules', 'three', 'build'),
         ],
         retainContextWhenHidden: true,
       },
@@ -67,10 +71,10 @@ export class StlViewerPanel {
     const threeUri = this.panel.webview.asWebviewUri(
       vscode.Uri.joinPath(
         this.extensionUri,
-        "node_modules",
-        "three",
-        "build",
-        "three.min.js",
+        'node_modules',
+        'three',
+        'build',
+        'three.min.js',
       ),
     );
 
@@ -171,10 +175,10 @@ export class StlViewerPanel {
   <div id="info-text">Loading…</div>
 </div>
 
-<script src="${threeUri}"></script>
+<script src="${threeUri.toString()}"></script>
 <script>
 (function() {
-  const STL_URI = "${stlUri}";
+  const STL_URI = "${stlUri.toString()}";
   const canvas = document.getElementById('stl-canvas');
   const liveRegion = document.getElementById('live-region');
   const infoText = document.getElementById('info-text');
@@ -237,6 +241,31 @@ export class StlViewerPanel {
     return fetch(STL_URI)
       .then(r => r.arrayBuffer())
       .then(buf => {
+        // P2-04: Detect ASCII STL (first 6 bytes start with "solid ")
+        // Binary STL has an 80-byte arbitrary header; ASCII always begins with "solid ".
+        // Note: some binary STLs also begin with "solid " in their header, so we do
+        // a secondary check: if byte 80 (triangle count) would give an impossibly large
+        // or mismatched file size, treat as ASCII.
+        const headerBytes = new Uint8Array(buf, 0, Math.min(6, buf.byteLength));
+        const headerText = String.fromCharCode(...headerBytes);
+        const looksAscii = headerText.toLowerCase().startsWith('solid ');
+
+        if (looksAscii && buf.byteLength > 84) {
+          // Verify triangle count consistency for binary format
+          const view = new DataView(buf);
+          const numTris = view.getUint32(80, true);
+          const expectedSize = 84 + numTris * 50;
+          if (Math.abs(expectedSize - buf.byteLength) > 4) {
+            // File size doesn't match binary expectation — almost certainly ASCII
+            const errorMsg = 'ASCII STL format detected. The built-in viewer only supports binary STL. ' +
+              'Re-export from OpenSCAD with binary output enabled, or run \\'3dm build\\' which produces a binary STL automatically.';
+            infoText.textContent = errorMsg;
+            announce('Error: ASCII STL format is not supported by the built-in viewer. ' +
+              'Please re-export as binary STL or use 3dm build.');
+            return;
+          }
+        }
+
         const geometry = parseStlBinary(buf);
         geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
@@ -378,7 +407,7 @@ export class StlViewerPanel {
     e.preventDefault();
   }, { passive: false });
 
-  // Keyboard events scoped to canvas only — prevents interference with screen reader global navigation
+  // Keyboard events scoped to canvas only
   canvas.addEventListener('keydown', e => {
     const step = 5;
     if (e.key === 'ArrowLeft') { theta -= step; updateCamera(); }

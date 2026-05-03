@@ -1,8 +1,8 @@
 {
   "name": "vscode-3dmake-gui",
   "displayName": "3DMake VS Code Extension",
-  "description": "Accessibility-focused VS Code extension for tdeck/3dmake — build, slice, preview, and print OpenSCAD models from VS Code.",
-  "version": "2026.5.1",
+  "description": "Accessibility-focused VS Code extension for tdeck/3dmake \u2014 build, slice, preview, and print OpenSCAD models from VS Code.",
+  "version": "2026.5.2",
   "publisher": "mrhunsaker",
   "license": "Apache-2.0",
   "engines": {
@@ -98,6 +98,21 @@
         "category": "3DMake"
       },
       {
+        "command": "3dmake.runBuildOrient",
+        "title": "3DMake: Build + Orient",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runOrientSlice",
+        "title": "3DMake: Orient + Slice",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runPreviewSlice",
+        "title": "3DMake: Preview + Slice",
+        "category": "3DMake"
+      },
+      {
         "command": "3dmake.runFullPipeline",
         "title": "3DMake: Full Pipeline (Build + Orient + Slice)",
         "category": "3DMake"
@@ -105,6 +120,11 @@
       {
         "command": "3dmake.runInfo",
         "title": "3DMake: Describe (Info)",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.runInfoInteractive",
+        "title": "3DMake: Describe (Interactive AI)",
         "category": "3DMake"
       },
       {
@@ -153,8 +173,8 @@
         "category": "3DMake"
       },
       {
-        "command": "3dmake.runSelfUpdate",
-        "title": "3DMake: Self-Update",
+        "command": "3dmake.checkForUpdates",
+        "title": "3DMake: Check for Updates (Opens Browser)",
         "category": "3DMake"
       },
       {
@@ -190,6 +210,21 @@
       {
         "command": "3dmake.openProjectConfig",
         "title": "3DMake: Open Project Config (3dmake.toml)",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.editOverlay",
+        "title": "3DMake: Edit Overlay",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.editProfile",
+        "title": "3DMake: Edit Profile",
+        "category": "3DMake"
+      },
+      {
+        "command": "3dmake.editPrompt",
+        "title": "3DMake: Edit AI Description Prompt",
         "category": "3DMake"
       },
       {
@@ -379,7 +414,9 @@
     "lint": "eslint src --ext ts",
     "package": "vsce package",
     "publish": "vsce publish",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint:fix": "eslint src --ext ts --fix"
   },
   "dependencies": {
     "three": "^0.128.0"
@@ -392,6 +429,8 @@
     "@typescript-eslint/parser": "^6.0.0",
     "@vscode/vsce": "^3.9.1",
     "eslint": "^8.50.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
     "typescript": "^5.3.0"
   }
 }

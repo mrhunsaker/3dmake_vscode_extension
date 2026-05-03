@@ -2,14 +2,15 @@
  * CommandOptionsProvider
  *
  * Populates the "Command Options" tree view.  Each item is an editable
- * option (model, view, profile, overlay) that maps to a 3dm CLI flag.
+ * option (model, view, profile, overlay, scale, copies) that maps to a
+ * 3dm CLI flag.
  *
  * Clicking an item opens an InputBox so keyboard-only / screen reader
  * users can set the value without leaving the keyboard.
  */
 
-import * as vscode from "vscode";
-import { ConfigManager } from "../utils/ConfigManager";
+import * as vscode from 'vscode';
+import { ConfigManager } from '../utils/ConfigManager';
 
 export class OptionItem extends vscode.TreeItem {
   constructor(
@@ -23,22 +24,24 @@ export class OptionItem extends vscode.TreeItem {
 
     this.description = currentValue
       ? `${cliFlag} ${currentValue}`
-      : "(default)";
-    this.tooltip = `${description}\nCurrent: ${currentValue || "(using default)"}`;
-    this.iconPath = new vscode.ThemeIcon("edit");
+      : '(default)';
+    this.tooltip = `${description}\nCurrent: ${currentValue || '(using default)'}`;
+    this.iconPath = new vscode.ThemeIcon('edit');
     this.command = {
-      command: "3dmake.setOption",
+      command: '3dmake.setOption',
       title: `Set ${displayLabel}`,
       arguments: [optionKey],
     };
     this.accessibilityInformation = {
-      label: `${displayLabel}, ${cliFlag} flag, current value: ${currentValue || "default"}. Activate to edit.`,
-      role: "treeitem",
+      label: `${displayLabel}, ${cliFlag} flag, current value: ${currentValue || 'default'}. Activate to edit.`,
+      role: 'treeitem',
     };
   }
 }
 
-export class CommandOptionsProvider implements vscode.TreeDataProvider<OptionItem> {
+export class CommandOptionsProvider
+  implements vscode.TreeDataProvider<OptionItem>
+{
   private _onDidChange = new vscode.EventEmitter<
     OptionItem | undefined | void
   >();
@@ -58,58 +61,78 @@ export class CommandOptionsProvider implements vscode.TreeDataProvider<OptionIte
   }
 
   getChildren(): OptionItem[] {
+    const copiesVal = this.config.getCopiesOverride();
     return [
       new OptionItem(
-        "model",
-        "Model (-m)",
+        'model',
+        'Model (-m)',
         this.config.getModelOverride() ?? this.config.getDefaultModel(),
-        "-m",
-        "Target model name inside the .scad file.",
+        '-m',
+        'Target model name inside the .scad file.',
       ),
       new OptionItem(
-        "view",
-        "View (-v)",
+        'view',
+        'View (-v)',
         this.config.getViewOverride() ?? this.config.getDefaultView(),
-        "-v",
-        "Silhouette view: 3sil, frontsil, backsil, leftsil, rightsil, topsil.",
+        '-v',
+        'Silhouette view: 3sil, frontsil, backsil, leftsil, rightsil, topsil.',
       ),
       new OptionItem(
-        "profile",
-        "Profile (-p)",
+        'profile',
+        'Profile (-p)',
         this.config.getProfileOverride() ?? this.config.getDefaultProfile(),
-        "-p",
-        "Slicer profile name.",
+        '-p',
+        'Slicer profile name.',
       ),
       new OptionItem(
-        "overlay",
-        "Overlay (-o)",
-        this.config.getOverlayOverride() ?? "",
-        "-o",
-        "Overlay name to apply during build.",
+        'overlay',
+        'Overlay (-o)',
+        this.config.getOverlayOverride() ?? '',
+        '-o',
+        'Overlay name to apply during build.',
+      ),
+      new OptionItem(
+        'scale',
+        'Scale (-s)',
+        this.config.getScaleOverride() ?? '',
+        '-s',
+        'Uniform scale factor when slicing (e.g. 1.05) or "auto".',
+      ),
+      new OptionItem(
+        'copies',
+        'Copies (-c)',
+        copiesVal !== undefined ? String(copiesVal) : '',
+        '-c',
+        'Number of copies of the model to create when slicing.',
       ),
     ];
   }
 
   public async editOption(key: string): Promise<void> {
     const labels: Record<string, string> = {
-      model: "Model name (-m)",
-      view: "View (-v) e.g. 3sil, frontsil",
-      profile: "Slicer profile (-p)",
-      overlay: "Overlay (-o)",
+      model: 'Model name (-m)',
+      view: 'View (-v) e.g. 3sil, frontsil',
+      profile: 'Slicer profile (-p)',
+      overlay: 'Overlay (-o)',
+      scale: 'Scale (-s) — numeric (e.g. 1.05) or "auto"',
+      copies: 'Copies (-c) — positive integer',
     };
 
+    const copiesVal = this.config.getCopiesOverride();
     const current: Record<string, string | undefined> = {
       model: this.config.getModelOverride() ?? this.config.getDefaultModel(),
       view: this.config.getViewOverride() ?? this.config.getDefaultView(),
       profile:
         this.config.getProfileOverride() ?? this.config.getDefaultProfile(),
       overlay: this.config.getOverlayOverride(),
+      scale: this.config.getScaleOverride(),
+      copies: copiesVal !== undefined ? String(copiesVal) : '',
     };
 
     const value = await vscode.window.showInputBox({
       prompt: labels[key] ?? key,
-      value: current[key] ?? "",
-      placeHolder: "Leave empty to use default",
+      value: current[key] ?? '',
+      placeHolder: 'Leave empty to use default',
     });
 
     if (value === undefined) {
@@ -117,18 +140,36 @@ export class CommandOptionsProvider implements vscode.TreeDataProvider<OptionIte
     } // cancelled
 
     switch (key) {
-      case "model":
+      case 'model':
         this.config.setModelOverride(value || undefined);
         break;
-      case "view":
+      case 'view':
         this.config.setViewOverride(value || undefined);
         break;
-      case "profile":
+      case 'profile':
         this.config.setProfileOverride(value || undefined);
         break;
-      case "overlay":
+      case 'overlay':
         this.config.setOverlayOverride(value || undefined);
         break;
+      case 'scale':
+        this.config.setScaleOverride(value || undefined);
+        break;
+      case 'copies': {
+        if (!value) {
+          this.config.setCopiesOverride(undefined);
+        } else {
+          const n = parseInt(value, 10);
+          if (isNaN(n) || n < 1) {
+            void vscode.window.showWarningMessage(
+              '3DMake: Copies must be a positive integer.',
+            );
+            return;
+          }
+          this.config.setCopiesOverride(n);
+        }
+        break;
+      }
     }
 
     this.refresh();

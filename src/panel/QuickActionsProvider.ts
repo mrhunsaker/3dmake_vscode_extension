@@ -68,6 +68,24 @@ const ACTIONS: ActionDef[] = [
     a11yLabel: "Run Build then Slice in sequence.",
   },
   {
+    label: "Build + Orient",
+    command: "3dmake.runBuildOrient",
+    icon: "arrow-swap",
+    a11yLabel: "Build STL then auto-orient for print bed.",
+  },
+  {
+    label: "Orient + Slice",
+    command: "3dmake.runOrientSlice",
+    icon: "layers",
+    a11yLabel: "Orient then slice the model.",
+  },
+  {
+    label: "Preview + Slice",
+    command: "3dmake.runPreviewSlice",
+    icon: "eye",
+    a11yLabel: "Generate silhouette preview then slice it for printing.",
+  },
+  {
     label: "Full Pipeline",
     command: "3dmake.runFullPipeline",
     icon: "rocket",
@@ -136,7 +154,9 @@ export class ActionItem extends vscode.TreeItem {
   }
 }
 
-export class QuickActionsProvider implements vscode.TreeDataProvider<ActionItem> {
+export class QuickActionsProvider
+  implements vscode.TreeDataProvider<ActionItem>
+{
   private _onDidChange = new vscode.EventEmitter<
     ActionItem | undefined | void
   >();
