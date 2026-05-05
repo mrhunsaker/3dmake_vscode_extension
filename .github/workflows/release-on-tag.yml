@@ -3,7 +3,7 @@ name: Release On Tag
 on:
   push:
     tags:
-      - "**"
+      - '**'
   workflow_dispatch:
 
 permissions:
@@ -33,11 +33,15 @@ jobs:
         run: npm run lint
 
       - name: Package VSIX
-        run: npm run package
+        run: |
+          mkdir -p artifacts
+          npx vsce package --out artifacts/vscode-3dmake-gui-${{ github.ref_name }}.vsix
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: vscode-3dmake-gui-*.vsix
+          tag_name: ${{ github.ref_name }}
+          files: artifacts/*.vsix
           generate_release_notes: true
           fail_on_unmatched_files: true
