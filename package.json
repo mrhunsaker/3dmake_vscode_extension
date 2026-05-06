@@ -1,7 +1,7 @@
 {
   "name": "vscode-3dmake-gui",
   "displayName": "3DMake VS Code Extension",
-  "description": "Accessibility-focused VS Code extension for tdeck/3dmake \u2014 build, slice, preview, and print OpenSCAD models from VS Code.",
+  "description": "Accessibility-focused VS Code extension for tdeck/3dmake — build, slice, preview, and print OpenSCAD models from VS Code.",
   "version": "2026.5.2",
   "publisher": "mrhunsaker",
   "license": "Apache-2.0",
@@ -414,6 +414,8 @@
     "lint": "eslint src --ext ts",
     "package": "vsce package",
     "publish": "vsce publish",
+    "tag:date": "bash ./scripts/ensure-release-tag.sh",
+    "release:date": "bash ./scripts/release-date.sh",
     "test": "node ./out/test/runTest.js",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint:fix": "eslint src --ext ts --fix"
