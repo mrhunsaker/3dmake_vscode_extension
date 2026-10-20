@@ -2,11 +2,11 @@
   "name": "vscode-3dmake-gui",
   "displayName": "3DMake VS Code Extension",
   "description": "Accessibility-focused VS Code extension for tdeck/3dmake — build, slice, preview, and print OpenSCAD models from VS Code.",
-  "version": "2026.5.2",
-  "publisher": "mrhunsaker",
+  "version": "2026.10.19",
+  "publisher": "tviresources",
   "license": "Apache-2.0",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "Other"
@@ -434,5 +434,9 @@
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.3",
     "typescript": "^5.3.0"
+  },
+  "allowScripts": {
+    "keytar@7.9.0": true,
+    "@vscode/vsce-sign@2.0.9": true
   }
 }

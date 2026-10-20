@@ -15,3 +15,7 @@ node_modules/**
 .github/**
 *.vsix
 remediation.json
+eslintrc.json
+prettierrc.json
+Test/**
+Scripts/**
